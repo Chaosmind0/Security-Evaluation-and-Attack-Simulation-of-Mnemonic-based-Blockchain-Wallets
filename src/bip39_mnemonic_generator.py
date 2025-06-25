@@ -1,5 +1,6 @@
 import os
 import hashlib
+import random
 import requests
 
 class BIP39MnemonicGenerator:
@@ -138,6 +139,7 @@ class BIP39MnemonicGenerator:
 
         Returns:
             String of the BIP39 mnemonic phrase.
+
         """
         
         if word_count == 12:
@@ -149,10 +151,34 @@ class BIP39MnemonicGenerator:
 
         mnemonic = self.entropy_to_mnemonic(entropy)
         return " ".join(mnemonic)
+    
+    # Generate a weak mnemonic with a weak pool of words
+    def generate_weak_mnemonic(self, word_count: int =12, weak_pool_size: int=128) -> str:
+        """
+        
+        Generates a BIP39 mnemonic phrase of the specified word count with a weak pool of words.
+        Default is 12-word mnemonic and a weak pool of 128 words.
+
+        param
+            word_count: Number of words in the mnemonic phrase.
+            weak_pool_size: Size of the weak pool of words to simulate user error.
+
+        Returns:
+            String of the BIP39 mnemonic phrase.
+            
+        """
+
+        # Using a weak pool of words to simulate user error
+        weak_pool = self.wordlist[:weak_pool_size]
+
+        # Pick random words from the weak pool
+        mnemonic = random.choices(weak_pool, k=word_count)
+        return " ".join(mnemonic)
 
 if __name__ == "__main__":
     # Example usage
     # Generate 12-word and 24-word mnemonics
+    # Generate weak 12-word and 24-word mnemonics with a weak pool of 128 and 256 words, respectively
 
     generator = BIP39MnemonicGenerator()
 
@@ -161,3 +187,9 @@ if __name__ == "__main__":
 
     print("\nGenerated 24-word mnemonic:")
     print(generator.generate_mnemonic(24))
+
+    print("\nExample of weak 12-word mnemonic (from first 128 words):")
+    print(generator.generate_weak_mnemonic(12))
+
+    print("\nExample of weak  24-word mnemonic (from first 256 words):")
+    print(generator.generate_weak_mnemonic(24, weak_pool_size=256))
