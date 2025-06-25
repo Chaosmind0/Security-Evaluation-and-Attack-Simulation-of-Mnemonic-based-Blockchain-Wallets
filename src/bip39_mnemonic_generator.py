@@ -30,7 +30,7 @@ class BIP39MnemonicGenerator:
         Downloads the BIP39 English wordlist from the official GitHub repository.
         Saves it to the specified path.
 
-        param 
+        Parameters 
             save_path: Path to save the wordlist file.
 
         """
@@ -79,7 +79,7 @@ class BIP39MnemonicGenerator:
         
         Generates entropy of desired bit length using os.urandom().
 
-        param
+        Parameters
             bits: Desired bit length of entropy.
 
         Returns:
@@ -98,7 +98,7 @@ class BIP39MnemonicGenerator:
         Converts entropy bytes into a list of BIP39 mnemonic words.
         More information about BIP39: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
-        param
+        Parameters
             entropy: Entropy bytes.
 
         Returns:
@@ -134,7 +134,7 @@ class BIP39MnemonicGenerator:
 
         More information about BIP32: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 
-        param
+        Parameters
             word_count: Number of words in the mnemonic phrase.
 
         Returns:
@@ -153,27 +153,48 @@ class BIP39MnemonicGenerator:
         return " ".join(mnemonic)
     
     # Generate a weak mnemonic with a weak pool of words
-    def generate_weak_mnemonic(self, word_count: int =12, weak_pool_size: int=128) -> str:
+    def generate_weak_mnemonic(
+        self, 
+        word_count: int = 12, 
+        weak_pool_size: int = 128, 
+        pool_start: int = 0,
+        allow_repeats: bool = True,
+        prefix: list[str] = None
+    ) -> str:
         """
-        
-        Generates a BIP39 mnemonic phrase of the specified word count with a weak pool of words.
-        Default is 12-word mnemonic and a weak pool of 128 words.
+        Generates a weak BIP39 mnemonic using limited entropy (e.g., leaked or low-randomness scenarios).
 
-        param
-            word_count: Number of words in the mnemonic phrase.
-            weak_pool_size: Size of the weak pool of words to simulate user error.
+        Parameters:
+            word_count (int): Number of mnemonic words.
+            weak_pool_size (int): Size of the weak word pool to simulate user error.
+            pool_start (int): Start index of the weak pool within the full wordlist.
+            allow_repeats (bool): If True, words may repeat.
+            prefix (list[str]): Optional fixed word prefix.
 
         Returns:
-            String of the BIP39 mnemonic phrase.
-            
+            str: Space-separated weak mnemonic phrase.
         """
 
-        # Using a weak pool of words to simulate user error
-        weak_pool = self.wordlist[:weak_pool_size]
+        if word_count not in [12, 24]:
+            raise ValueError("Only 12 or 24 words are supported.")
 
-        # Pick random words from the weak pool
-        mnemonic = random.choices(weak_pool, k=word_count)
-        return " ".join(mnemonic)
+        if pool_start < 0 or pool_start + weak_pool_size > len(self.wordlist):
+            raise ValueError("Invalid weak pool range.")
+
+        pool = self.wordlist[pool_start:pool_start + weak_pool_size]
+        remaining = word_count - len(prefix) if prefix else word_count
+
+        if not allow_repeats and remaining > len(pool):
+            raise ValueError("Not enough unique words in weak pool to fill mnemonic without repeats.")
+
+        if allow_repeats:
+            chosen = random.choices(pool, k=remaining)
+        else:
+            chosen = random.sample(pool, k=remaining)
+
+        final_words = (prefix or []) + chosen
+        return " ".join(final_words)
+
 
 if __name__ == "__main__":
     # Example usage
@@ -188,8 +209,19 @@ if __name__ == "__main__":
     print("\nGenerated 24-word mnemonic:")
     print(generator.generate_mnemonic(24))
 
-    print("\nExample of weak 12-word mnemonic (from first 128 words):")
-    print(generator.generate_weak_mnemonic(12))
+    print("\nWeak 12-word mnemonic with fixed prefix and repeats:")
+    print(generator.generate_weak_mnemonic(
+        word_count=12,
+        weak_pool_size=64,
+        pool_start=0,
+        allow_repeats=True,
+        prefix=["abandon", "abandon", "abandon"]
+    ))
 
-    print("\nExample of weak  24-word mnemonic (from first 256 words):")
-    print(generator.generate_weak_mnemonic(24, weak_pool_size=256))
+    print("\nWeak 24-word mnemonic from a middle pool without repeats:")
+    print(generator.generate_weak_mnemonic(
+        word_count=24,
+        weak_pool_size=64,
+        pool_start=1024,
+        allow_repeats=False
+    ))
