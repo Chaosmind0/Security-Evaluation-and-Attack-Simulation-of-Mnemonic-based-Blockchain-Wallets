@@ -3,6 +3,7 @@ import hashlib
 import random
 import requests
 
+
 class BIP39MnemonicGenerator:
     """
 
@@ -30,7 +31,7 @@ class BIP39MnemonicGenerator:
         Downloads the BIP39 English wordlist from the official GitHub repository.
         Saves it to the specified path.
 
-        Parameters 
+        Parameters
             save_path: Path to save the wordlist file.
 
         """
@@ -76,7 +77,7 @@ class BIP39MnemonicGenerator:
     # Generate entropy of desired bit length
     def generate_entropy(self, bits: int) -> bytes:
         """
-        
+
         Generates entropy of desired bit length using os.urandom().
 
         Parameters
@@ -86,7 +87,7 @@ class BIP39MnemonicGenerator:
             Entropy bytes.
 
         """
-        
+
         if bits not in [128, 256]:
             raise ValueError("Only 128 or 256 bits supported.")
         return os.urandom(bits // 8)
@@ -94,7 +95,7 @@ class BIP39MnemonicGenerator:
     # Convert entropy + checksum into mnemonic
     def entropy_to_mnemonic(self, entropy: bytes) -> list[str]:
         """
-        
+
         Converts entropy bytes into a list of BIP39 mnemonic words.
         More information about BIP39: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
@@ -105,10 +106,10 @@ class BIP39MnemonicGenerator:
             List of BIP39 mnemonic words.
 
         """
-        
+
         ENT = len(entropy) * 8
         checksum_length = ENT // 32
-        entropy_bits = bin(int.from_bytes(entropy, 'big'))[2:].zfill(ENT)
+        entropy_bits = bin(int.from_bytes(entropy, "big"))[2:].zfill(ENT)
 
         # SHA256 to get checksum bits
         hash_digest = hashlib.sha256(entropy).hexdigest()
@@ -120,7 +121,7 @@ class BIP39MnemonicGenerator:
         words = []
 
         for i in range(0, len(full_bits), 11):
-            idx = int(full_bits[i:i + 11], 2)
+            idx = int(full_bits[i : i + 11], 2)
             words.append(self.wordlist[idx])
 
         return words
@@ -128,7 +129,7 @@ class BIP39MnemonicGenerator:
     # Entry point to generate final mnemonic
     def generate_mnemonic(self, word_count: int = 12) -> str:
         """
-        
+
         Generates a BIP39 mnemonic phrase of the specified word count.
         Default is 12-word mnemonic.
 
@@ -141,7 +142,7 @@ class BIP39MnemonicGenerator:
             String of the BIP39 mnemonic phrase.
 
         """
-        
+
         if word_count == 12:
             entropy = self.generate_entropy(128)
         elif word_count == 24:
@@ -151,15 +152,15 @@ class BIP39MnemonicGenerator:
 
         mnemonic = self.entropy_to_mnemonic(entropy)
         return " ".join(mnemonic)
-    
+
     # Generate a weak mnemonic with a weak pool of words
     def generate_weak_mnemonic(
-        self, 
-        word_count: int = 12, 
-        weak_pool_size: int = 128, 
+        self,
+        word_count: int = 12,
+        weak_pool_size: int = 128,
         pool_start: int = 0,
         allow_repeats: bool = True,
-        prefix: list[str] = None
+        prefix: list[str] = None,
     ) -> str:
         """
         Generates a weak BIP39 mnemonic using limited entropy (e.g., leaked or low-randomness scenarios).
@@ -181,11 +182,13 @@ class BIP39MnemonicGenerator:
         if pool_start < 0 or pool_start + weak_pool_size > len(self.wordlist):
             raise ValueError("Invalid weak pool range.")
 
-        pool = self.wordlist[pool_start:pool_start + weak_pool_size]
+        pool = self.wordlist[pool_start : pool_start + weak_pool_size]
         remaining = word_count - len(prefix) if prefix else word_count
 
         if not allow_repeats and remaining > len(pool):
-            raise ValueError("Not enough unique words in weak pool to fill mnemonic without repeats.")
+            raise ValueError(
+                "Not enough unique words in weak pool to fill mnemonic without repeats."
+            )
 
         if allow_repeats:
             chosen = random.choices(pool, k=remaining)
@@ -210,18 +213,19 @@ if __name__ == "__main__":
     print(generator.generate_mnemonic(24))
 
     print("\nWeak 12-word mnemonic with fixed prefix and repeats:")
-    print(generator.generate_weak_mnemonic(
-        word_count=12,
-        weak_pool_size=64,
-        pool_start=0,
-        allow_repeats=True,
-        prefix=["abandon", "abandon", "abandon"]
-    ))
+    print(
+        generator.generate_weak_mnemonic(
+            word_count=12,
+            weak_pool_size=64,
+            pool_start=0,
+            allow_repeats=True,
+            prefix=["abandon", "abandon", "abandon"],
+        )
+    )
 
     print("\nWeak 24-word mnemonic from a middle pool without repeats:")
-    print(generator.generate_weak_mnemonic(
-        word_count=24,
-        weak_pool_size=64,
-        pool_start=1024,
-        allow_repeats=False
-    ))
+    print(
+        generator.generate_weak_mnemonic(
+            word_count=24, weak_pool_size=64, pool_start=1024, allow_repeats=False
+        )
+    )
