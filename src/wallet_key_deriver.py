@@ -22,8 +22,8 @@ class WalletKeyDeriver:
 
     """
 
-    def __init__(self, mnemonic: str, passphrase: str = ""):
-        if not Bip39MnemonicValidator().IsValid(mnemonic):
+    def __init__(self, mnemonic: str, passphrase: str = "", validate: bool = True):
+        if validate and not Bip39MnemonicValidator().IsValid(mnemonic):
             raise ValueError("Invalid BIP39 mnemonic phrase.")
 
         self.mnemonic = mnemonic
