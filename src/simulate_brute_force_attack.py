@@ -2,6 +2,7 @@ import time
 from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
 from unsafe_wallet_key_deriver import UnsafeWalletKeyDeriver
+from tqdm import tqdm
 
 
 def simulate_brute_force_attack(
@@ -11,7 +12,7 @@ def simulate_brute_force_attack(
     prefix: list[str] = ["abandon", "abandon", "abandon"],
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
-    max_attempts: int = 1000000,  # 10^6
+    max_attempts: int = 10**6,
 ):
     """
 
@@ -55,7 +56,7 @@ def simulate_brute_force_attack(
 
     # Step 2: Start brute-force attempts
     start_time = time.time()
-    for attempt in range(1, max_attempts + 1):
+    for attempt in tqdm(range(1, max_attempts + 1), desc="Brute-force progress"):
         guess_mnemonic = generator.generate_weak_mnemonic(
             word_count=word_count,
             weak_pool_size=weak_pool_size,
