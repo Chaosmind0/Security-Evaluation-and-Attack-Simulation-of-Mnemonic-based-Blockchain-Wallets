@@ -164,6 +164,7 @@ class BIP39MnemonicGenerator:
     ) -> str:
         """
         Generates a weak BIP39 mnemonic using limited entropy (e.g., leaked or low-randomness scenarios).
+        Cannot be used in the real world as it is not secure.
 
         Parameters:
             word_count (int): Number of mnemonic words.
