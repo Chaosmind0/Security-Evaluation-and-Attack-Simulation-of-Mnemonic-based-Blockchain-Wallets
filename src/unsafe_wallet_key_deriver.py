@@ -7,6 +7,7 @@ from bip_utils import (
     Bip44Changes,
 )
 
+
 class UnsafeWalletKeyDeriver:
     """
 
@@ -46,7 +47,9 @@ class UnsafeWalletKeyDeriver:
             dklen=64,
         )
 
-    def derive_eth_address(self, account: int = 0, change: int = 0, address_index: int = 0) -> dict:
+    def derive_eth_address(
+        self, account: int = 0, change: int = 0, address_index: int = 0
+    ) -> dict:
         """
 
         Derives an Ethereum address and private key from the BIP39 mnemonic phrase.
@@ -60,10 +63,12 @@ class UnsafeWalletKeyDeriver:
             Dictionary containing the Ethereum address, private key, and public key.
 
         """
-        
+
         bip44 = Bip44.FromSeed(self.seed_bytes, Bip44Coins.ETHEREUM)
         change_enum = Bip44Changes.CHAIN_EXT if change == 0 else Bip44Changes.CHAIN_INT
-        addr = bip44.Purpose().Coin().Account(account).Change(change_enum).AddressIndex(address_index)
+        addr = (
+            bip44.Purpose().Coin().Account(account).Change(change_enum).AddressIndex(address_index)
+        )
         return {
             "coin": "ETHEREUM",
             "path": f"m/44'/60'/{account}'/{change}/{address_index}",
@@ -72,7 +77,9 @@ class UnsafeWalletKeyDeriver:
             "public_key": addr.PublicKey().RawCompressed().ToHex(),
         }
 
-    def derive_btc_address(self, account: int = 0, change: int = 0, address_index: int = 0) -> dict:
+    def derive_btc_address(
+        self, account: int = 0, change: int = 0, address_index: int = 0
+    ) -> dict:
         """
 
         Derives a Bitcoin address and private key from the BIP39 mnemonic phrase.
@@ -89,7 +96,9 @@ class UnsafeWalletKeyDeriver:
 
         bip44 = Bip44.FromSeed(self.seed_bytes, Bip44Coins.BITCOIN)
         change_enum = Bip44Changes.CHAIN_EXT if change == 0 else Bip44Changes.CHAIN_INT
-        addr = bip44.Purpose().Coin().Account(account).Change(change_enum).AddressIndex(address_index)
+        addr = (
+            bip44.Purpose().Coin().Account(account).Change(change_enum).AddressIndex(address_index)
+        )
         return {
             "coin": "BITCOIN",
             "path": f"m/44'/0'/{account}'/{change}/{address_index}",

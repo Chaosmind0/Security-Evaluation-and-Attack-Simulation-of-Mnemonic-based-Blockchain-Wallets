@@ -1,6 +1,7 @@
 import time
 from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
+from unsafe_wallet_key_deriver import UnsafeWalletKeyDeriver
 
 
 def simulate_brute_force_attack(
@@ -40,7 +41,7 @@ def simulate_brute_force_attack(
         prefix=prefix,
     )
 
-    target_wallet = WalletKeyDeriver(target_mnemonic, validate=False)
+    target_wallet = UnsafeWalletKeyDeriver(target_mnemonic)
     if target_coin == "ETHEREUM":
         target_address = target_wallet.derive_eth_address()["address"]
     elif target_coin == "BITCOIN":
@@ -63,7 +64,7 @@ def simulate_brute_force_attack(
             prefix=prefix,
         )
         try:
-            guess_wallet = WalletKeyDeriver(guess_mnemonic, validate=False)
+            guess_wallet = UnsafeWalletKeyDeriver(guess_mnemonic)
             guess_address = (
                 guess_wallet.derive_eth_address()["address"]
                 if target_coin == "ETHEREUM"

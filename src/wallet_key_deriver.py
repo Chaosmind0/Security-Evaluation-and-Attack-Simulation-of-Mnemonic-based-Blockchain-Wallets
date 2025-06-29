@@ -24,7 +24,7 @@ class WalletKeyDeriver:
 
     def __init__(self, mnemonic: str, passphrase: str = "", validate: bool = True):
         """
-        
+
         Initializes the WalletKeyDeriver object.
 
         Parameters
@@ -33,7 +33,7 @@ class WalletKeyDeriver:
             validate: Whether to validate the mnemonic phrase.
 
         """
-        
+
         if validate and not Bip39MnemonicValidator().IsValid(mnemonic):
             raise ValueError("Invalid BIP39 mnemonic phrase.")
 
