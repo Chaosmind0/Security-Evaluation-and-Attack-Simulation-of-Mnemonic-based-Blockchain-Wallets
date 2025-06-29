@@ -1,0 +1,2 @@
+bip-utils>=2.7.0
+requests
