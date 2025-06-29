@@ -12,7 +12,7 @@ def simulate_brute_force_attack(
     prefix: list[str] = ["abandon", "abandon", "abandon"],
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
-    max_attempts: int = 10**6,
+    max_attempts: int = 10**4, 
 ):
     """
 
