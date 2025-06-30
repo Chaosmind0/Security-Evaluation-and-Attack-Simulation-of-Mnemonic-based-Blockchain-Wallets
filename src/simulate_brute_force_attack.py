@@ -185,15 +185,14 @@ if __name__ == "__main__":
             for prefix_len in range(3, 7):
                 for allow_repeats in [True, False]:
                     for target_coin in ["ETHEREUM", "BITCOIN"]:
-                        for word in ["abandon", "legal"]:
-                            case = {
-                                "word_count": word_count,
-                                "weak_pool_size": weak_pool_size,
-                                "pool_start": 0,
-                                "prefix": [word] * prefix_len,
-                                "allow_repeats": allow_repeats,
-                                "target_coin": target_coin,
-                            }
-                            test_cases.extend(generate_test_cases(case, repeat=4))
+                        case = {
+                            "word_count": word_count,
+                            "weak_pool_size": weak_pool_size,
+                            "pool_start": 0,
+                            "prefix": ["abandon"] * prefix_len,
+                            "allow_repeats": allow_repeats,
+                            "target_coin": target_coin,
+                        }
+                        test_cases.extend(generate_test_cases(case, repeat=4))
 
     batch_test_and_save_report(test_cases)
