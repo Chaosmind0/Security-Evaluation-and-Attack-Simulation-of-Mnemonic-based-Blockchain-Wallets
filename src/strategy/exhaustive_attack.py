@@ -1,5 +1,5 @@
 from strategy.base_strategy import BruteForceAttackStrategy
-from simulate_brute_force_attack import exhaustive_brute_force_attack
+from attack_core import exhaustive_brute_force_attack
 
 class ExhaustiveAttackStrategy(BruteForceAttackStrategy):
     """

@@ -11,8 +11,9 @@ def exhaustive_brute_force_attack(
     weak_pool_size: int = 16,
     pool_start: int = 0,
     prefix: List[str] = None,
+    allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
-    max_attempts: int = 100000,
+    max_attempts: int = 10**6,
 ) -> dict:
     """
     
@@ -48,7 +49,7 @@ def exhaustive_brute_force_attack(
         word_count=word_count,
         weak_pool_size=weak_pool_size,
         pool_start=pool_start,
-        allow_repeats=True,
+        allow_repeats=allow_repeats,
         prefix=prefix,
     )
     print(f"Target mnemonic: {target_mnemonic}")
@@ -63,7 +64,7 @@ def exhaustive_brute_force_attack(
     start_time = time.time()
     attempts = 0
 
-    for combo in itertools.product(pool, repeat=remaining):
+    for combo in tqdm(itertools.product(pool, repeat=remaining), total=total_combinations, desc="Exhaustive search"):
         mnemonic = prefix + list(combo)
         mnemonic_str = " ".join(mnemonic)
         try:
@@ -105,7 +106,7 @@ def simulate_brute_force_attack(
     prefix: list[str] = ["abandon", "abandon", "abandon"],
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
-    max_attempts: int = 10,
+    max_attempts: int = 10**6,
 ) -> dict:
     """
 
