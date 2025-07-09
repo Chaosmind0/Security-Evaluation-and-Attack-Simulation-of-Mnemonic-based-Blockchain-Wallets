@@ -30,6 +30,22 @@ def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, po
 
 
 def estimate_brute_force_security(pool_size: int, word_count: int, prefix_length: int, max_attempts: int, allow_repeats: bool = True) -> dict:
+    """
+    
+    Calculates the success probability and entropy of a brute-force attack.
+
+    Parameters:
+        pool_size (int): Size of weak entropy pool.
+        word_count (int): Number of words in the mnemonic.
+        prefix_length (int): Length of known prefix in the mnemonic.
+        max_attempts (int): Max number of attempts before stopping.
+        allow_repeats (bool): Allow repeated words.
+
+    Returns:
+        Dictionary with the results of the attack.
+
+    """
+    
     r = word_count - prefix_length
     N = pool_size
     T = max_attempts
