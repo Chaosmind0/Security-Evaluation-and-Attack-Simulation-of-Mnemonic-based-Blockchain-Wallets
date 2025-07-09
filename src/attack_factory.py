@@ -1,5 +1,5 @@
-from random_attack import RandomAttackStrategy
-from exhaustive_attack import ExhaustiveAttackStrategy
+from .strategy.random_attack import RandomAttackStrategy
+from .strategy.exhaustive_attack import ExhaustiveAttackStrategy
 
 def get_attack_strategy(mode: str):
     """
