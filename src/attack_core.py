@@ -5,6 +5,29 @@ from tqdm import tqdm
 import itertools
 from typing import List
 
+def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, pool_start: int):
+    """
+
+    Checks the validity of the attack parameters.
+
+    Parameters:
+        prefix (list[str]): Known prefix words in mnemonic.
+        word_count (int): Number of words in the mnemonic.
+        weak_pool_size (int): Size of weak entropy pool.
+        pool_start (int): Start index of weak pool.
+    
+    Returns:
+        None.
+
+    """
+
+    assert len(prefix) <= word_count, "Prefix length exceeds word count"
+    assert word_count in [12, 24], "Word count must be 12 or 24"
+    assert weak_pool_size <= 2048, "Weak pool size must be <= 2048"
+    assert pool_start >= 0, "Pool start index must be >= 0"
+    assert pool_start + weak_pool_size <= 2048, "Pool start + weak pool size must be <= 2048"
+
+
 # Define a function to simulate an exhaustive brute-force attack using itertools.product
 def exhaustive_brute_force_attack(
     word_count: int = 6,
@@ -32,6 +55,8 @@ def exhaustive_brute_force_attack(
         Dictionary with the results of the attack.
 
     """
+
+    check_parameters(prefix, word_count, weak_pool_size, pool_start)
     
     generator = BIP39MnemonicGenerator()
     wordlist = generator.wordlist
@@ -125,6 +150,8 @@ def simulate_brute_force_attack(
         Dictionary with the results of the attack.
 
     """
+    
+    check_parameters(prefix, word_count, weak_pool_size, pool_start)
 
     generator = BIP39MnemonicGenerator()
     result = {
