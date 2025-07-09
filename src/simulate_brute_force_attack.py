@@ -6,6 +6,7 @@ from unsafe_wallet_key_deriver import UnsafeWalletKeyDeriver
 from tqdm import tqdm
 import itertools
 from typing import List
+from attack_factory import get_attack_strategy
 
 
 # Define a function to simulate an exhaustive brute-force attack using itertools.product
@@ -108,7 +109,7 @@ def simulate_brute_force_attack(
     prefix: list[str] = ["abandon", "abandon", "abandon"],
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
-    max_attempts: int = 10**4,
+    max_attempts: int = 10,
 ) -> dict:
     """
 
@@ -209,7 +210,7 @@ def simulate_brute_force_attack(
 
 
 def batch_test_and_save_report(
-    test_cases: dict, report_path: str = "report/brute_force_results.csv"
+    test_cases: dict, mode: str ,report_path: str = "report/brute_force_results.csv"
 ) -> None:
     """
 
@@ -217,6 +218,7 @@ def batch_test_and_save_report(
 
     Parameters:
         test_cases (list[dict]): List of test cases.
+        mode (str): Attack mode.
         report_path (str): Path to save the report.
 
     Returns:
@@ -225,6 +227,8 @@ def batch_test_and_save_report(
     """
 
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
+
+    strategy = get_attack_strategy(mode)
 
     with open(report_path, mode="w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -248,7 +252,7 @@ def batch_test_and_save_report(
 
         for case in test_cases:
             print(f"Running test case: {case}")
-            result = simulate_brute_force_attack(**case)
+            result = strategy.run(**case)
             writer.writerow(result)
             print(
                 f"Test completed. Success: {result['success']}, Attempts: {result['attempts']}, Time: {result['time_elapsed_sec']}s\n"
@@ -290,4 +294,4 @@ if __name__ == "__main__":
                         }
                         test_cases.extend(generate_test_cases(case, repeat=4))
 
-    batch_test_and_save_report(test_cases)
+    batch_test_and_save_report(test_cases, "exhaustive")
