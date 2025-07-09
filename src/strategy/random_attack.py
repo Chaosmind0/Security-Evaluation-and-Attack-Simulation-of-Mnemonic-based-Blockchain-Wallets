@@ -1,4 +1,4 @@
-from base_strategy import BruteForceAttackStrategy
+from strategy.base_strategy import BruteForceAttackStrategy
 from simulate_brute_force_attack import simulate_brute_force_attack
 
 class RandomAttackStrategy(BruteForceAttackStrategy):
