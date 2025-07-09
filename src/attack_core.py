@@ -3,9 +3,10 @@ from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from unsafe_wallet_key_deriver import UnsafeWalletKeyDeriver
 from tqdm import tqdm
 import itertools
+import math
 from typing import List
 
-def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, pool_start: int):
+def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, pool_start: int) -> None:
     """
 
     Checks the validity of the attack parameters.
@@ -26,6 +27,36 @@ def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, po
     assert weak_pool_size <= 2048, "Weak pool size must be <= 2048"
     assert pool_start >= 0, "Pool start index must be >= 0"
     assert pool_start + weak_pool_size <= 2048, "Pool start + weak pool size must be <= 2048"
+
+
+def estimate_brute_force_security(pool_size: int, word_count: int, prefix_length: int, max_attempts: int, allow_repeats: bool = True) -> dict:
+    r = word_count - prefix_length
+    N = pool_size
+    T = max_attempts
+
+    # Total combinations calculation
+    if allow_repeats:
+        total_combinations = N ** r
+    else:
+        if N < r:
+            return {"success_probability": 0, "entropy": 0}
+        total_combinations = math.perm(N, r)  # Number of combinations without repetitions
+
+    # Success probability calculation
+    success_prob = T / total_combinations
+
+    # Entropy value calculation (in bits)
+    entropy = r * math.log2(N) if N > 0 else 0
+
+    print("Total combinations: " + total_combinations)
+    print("Success probability: " + success_prob)
+    print("entropy bits: " + entropy)
+
+    return {
+        "total_combinations": total_combinations,
+        "success_probability": success_prob,
+        "entropy_bits": entropy
+    }
 
 
 # Define a function to simulate an exhaustive brute-force attack using itertools.product
@@ -55,8 +86,6 @@ def exhaustive_brute_force_attack(
         Dictionary with the results of the attack.
 
     """
-
-    check_parameters(prefix, word_count, weak_pool_size, pool_start)
     
     generator = BIP39MnemonicGenerator()
     wordlist = generator.wordlist
@@ -150,8 +179,6 @@ def simulate_brute_force_attack(
         Dictionary with the results of the attack.
 
     """
-    
-    check_parameters(prefix, word_count, weak_pool_size, pool_start)
 
     generator = BIP39MnemonicGenerator()
     result = {
