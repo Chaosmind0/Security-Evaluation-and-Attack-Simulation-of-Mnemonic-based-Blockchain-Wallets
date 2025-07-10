@@ -64,9 +64,9 @@ def estimate_brute_force_security(pool_size: int, word_count: int, prefix_length
     # Entropy value calculation (in bits)
     entropy = r * math.log2(N) if N > 0 else 0
 
-    print("Total combinations: " + total_combinations)
-    print("Success probability: " + success_prob)
-    print("entropy bits: " + entropy)
+    print("Total combinations: " + str(total_combinations))
+    print("Success probability: " + str(success_prob))
+    print("entropy bits: " + str(entropy))
 
     return {
         "total_combinations": total_combinations,
