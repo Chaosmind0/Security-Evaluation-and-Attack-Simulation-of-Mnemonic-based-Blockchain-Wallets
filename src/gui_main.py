@@ -2,7 +2,7 @@ import sys
 import threading
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QLabel, QTextEdit, QVBoxLayout,
-    QHBoxLayout, QComboBox, QMessageBox, QLineEdit, QCheckBox, QProgressBar
+    QHBoxLayout, QComboBox, QMessageBox, QLineEdit, QCheckBox, QProgressBar, QGroupBox, QGridLayout
 )
 from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
@@ -15,38 +15,68 @@ class WalletGUI(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Mnemonic Wallet Toolkit")
-        self.setGeometry(300, 200, 900, 700)
-
+        self.setGeometry(200, 100, 1200, 700)
         self.generator = BIP39MnemonicGenerator()
-
         self.init_ui()
 
     def init_ui(self):
+        main_layout = QHBoxLayout()
+
+        # Left: Mnemonic generation + Wallet derivation
+        left_panel = QVBoxLayout()
+        left_panel.addWidget(self.build_mnemonic_group())
+        left_panel.addWidget(self.build_derivation_group())
+
+        # Right: Brute-force attack simulator
+        right_panel = QVBoxLayout()
+        right_panel.addWidget(self.build_attack_group())
+
+        main_layout.addLayout(left_panel, 1)
+        main_layout.addLayout(right_panel, 2)
+
+        self.setLayout(main_layout)
+
+    def build_mnemonic_group(self):
+        group = QGroupBox("Mnemonic and Address")
         layout = QVBoxLayout()
 
-        # ---------- 助记词生成 ----------
-        layout.addWidget(QLabel("1. Mnemonic Generator"))
-
+        # Word count + generate button
+        count_layout = QHBoxLayout()
+        count_layout.addWidget(QLabel("Word count"))
         self.word_count_box = QComboBox()
         self.word_count_box.addItems(["12", "24"])
-        layout.addWidget(self.word_count_box)
-
-        self.generate_btn = QPushButton("Generate Mnemonic")
+        count_layout.addWidget(self.word_count_box)
+        self.generate_btn = QPushButton("Generate")
         self.generate_btn.clicked.connect(self.generate_mnemonic)
-        layout.addWidget(self.generate_btn)
+        count_layout.addWidget(self.generate_btn)
+        layout.addLayout(count_layout)
 
+        # Output: mnemonic
+        self.mnemonic_label = QLabel("<a href='#'>Mnemonic Phrase</a>")
+        layout.addWidget(self.mnemonic_label)
         self.mnemonic_output = QTextEdit()
         self.mnemonic_output.setReadOnly(True)
         layout.addWidget(self.mnemonic_output)
 
-        # ---------- 钱包推导 ----------
-        layout.addWidget(QLabel("2. Wallet Derivation"))
+        # Output: seed
+        self.seed_label = QLabel("<a href='#'>BIP39 Seed</a>")
+        layout.addWidget(self.seed_label)
+        self.seed_output = QTextEdit()
+        self.seed_output.setReadOnly(True)
+        layout.addWidget(self.seed_output)
+
+        group.setLayout(layout)
+        return group
+
+    def build_derivation_group(self):
+        group = QGroupBox("Wallet Derivation")
+        layout = QVBoxLayout()
 
         self.mnemonic_input = QTextEdit()
         self.mnemonic_input.setPlaceholderText("Paste your BIP39 mnemonic phrase here...")
         layout.addWidget(self.mnemonic_input)
 
-        self.derive_btn = QPushButton("Derive ETH & BTC Address")
+        self.derive_btn = QPushButton("Generate")
         self.derive_btn.clicked.connect(self.derive_wallet)
         layout.addWidget(self.derive_btn)
 
@@ -54,62 +84,72 @@ class WalletGUI(QWidget):
         self.result_output.setReadOnly(True)
         layout.addWidget(self.result_output)
 
-        # ---------- 破解模拟 ----------
-        layout.addWidget(QLabel("3. Brute-force Attack Simulator"))
+        group.setLayout(layout)
+        return group
 
+    def build_attack_group(self):
+        group = QGroupBox("Brute-force Attack Simulator")
+        layout = QGridLayout()
+
+        # Attack parameters row 1
+        layout.addWidget(QLabel("Mode:"), 0, 0)
         self.mode_box = QComboBox()
         self.mode_box.addItems(["random", "exhaustive"])
-        layout.addWidget(QLabel("Mode:"))
-        layout.addWidget(self.mode_box)
+        layout.addWidget(self.mode_box, 0, 1)
 
-        self.prefix_input = QLineEdit("abandon abandon abandon")
-        layout.addWidget(QLabel("Prefix (space-separated):"))
-        layout.addWidget(self.prefix_input)
-
+        layout.addWidget(QLabel("Weak Pool Size:"), 0, 2)
         self.pool_size_input = QLineEdit("64")
-        layout.addWidget(QLabel("Weak Pool Size:"))
-        layout.addWidget(self.pool_size_input)
+        layout.addWidget(self.pool_size_input, 0, 3)
 
+        layout.addWidget(QLabel("Pool Start Index:"), 0, 4)
         self.pool_start_input = QLineEdit("0")
-        layout.addWidget(QLabel("Pool Start Index:"))
-        layout.addWidget(self.pool_start_input)
+        layout.addWidget(self.pool_start_input, 0, 5)
+
+        layout.addWidget(QLabel("Target Coin:"), 0, 6)
+        self.target_coin_box = QComboBox()
+        self.target_coin_box.addItems(["ETHEREUM", "BITCOIN"])
+        layout.addWidget(self.target_coin_box, 0, 7)
+
+        # Prefix
+        layout.addWidget(QLabel("Prefix (space-separated):"), 1, 0, 1, 2)
+        self.prefix_input = QLineEdit("abandon abandon abandon")
+        layout.addWidget(self.prefix_input, 1, 2, 1, 6)
+
+        # Row 3: word count, attempts, checkbox, start
+        layout.addWidget(QLabel("Attack Mnemonic Word Count:"), 2, 0)
+        self.attack_word_count_box = QComboBox()
+        self.attack_word_count_box.addItems(["12", "24"])
+        layout.addWidget(self.attack_word_count_box, 2, 1)
+
+        layout.addWidget(QLabel("Max Attempts:"), 2, 2)
+        self.max_attempts_input = QLineEdit("10000")
+        layout.addWidget(self.max_attempts_input, 2, 3)
 
         self.allow_repeats_box = QCheckBox("Allow Repeats")
         self.allow_repeats_box.setChecked(True)
-        layout.addWidget(self.allow_repeats_box)
+        layout.addWidget(self.allow_repeats_box, 2, 4)
 
-        self.target_coin_box = QComboBox()
-        self.target_coin_box.addItems(["ETHEREUM", "BITCOIN"])
-        layout.addWidget(QLabel("Target Coin:"))
-        layout.addWidget(self.target_coin_box)
+        self.attack_btn = QPushButton("Generate")
+        self.attack_btn.clicked.connect(self.start_attack_thread)
+        layout.addWidget(self.attack_btn, 2, 6, 1, 2)
 
-        self.max_attempts_input = QLineEdit("10000")
-        layout.addWidget(QLabel("Max Attempts:"))
-        layout.addWidget(self.max_attempts_input)
-
-        self.attack_word_count_box = QComboBox()
-        self.attack_word_count_box.addItems(["12", "24"])
-        layout.addWidget(QLabel("Attack Mnemonic Word Count:"))
-        layout.addWidget(self.attack_word_count_box)
-
-        self.start_attack_btn = QPushButton("Start Brute-force Attack")
-        self.start_attack_btn.clicked.connect(self.start_attack_thread)
-        layout.addWidget(self.start_attack_btn)
-
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        layout.addWidget(self.progress_bar)
-
+        # Output & progress
         self.attack_output = QTextEdit()
         self.attack_output.setReadOnly(True)
-        layout.addWidget(self.attack_output)
+        layout.addWidget(self.attack_output, 3, 0, 1, 8)
 
-        self.setLayout(layout)
+        self.progress_bar = QProgressBar()
+        layout.addWidget(self.progress_bar, 4, 0, 1, 8)
+
+        group.setLayout(layout)
+        return group
 
     def generate_mnemonic(self):
         count = int(self.word_count_box.currentText())
         mnemonic = self.generator.generate_mnemonic(count)
         self.mnemonic_output.setText(mnemonic)
+        deriver = WalletKeyDeriver(mnemonic)
+        self.seed_output.setText(deriver.get_seed_hex())
 
     def derive_wallet(self):
         mnemonic = self.mnemonic_input.toPlainText().strip()
@@ -117,18 +157,17 @@ class WalletGUI(QWidget):
             deriver = WalletKeyDeriver(mnemonic)
             eth = deriver.derive_eth_address()
             btc = deriver.derive_btc_address()
-            result = f"[Ethereum]\\nAddress: {eth['address']}\\nPrivate Key: {eth['private_key']}\\n\\n"
-            result += f"[Bitcoin]\\nAddress: {btc['address']}\\nPrivate Key: {btc['private_key']}\\n"
+            result = f"Ethereum Address Info\ncoin: ETHEREUM\npath: {eth['path']}\naddress: {eth['address']}\nprivate_key: {eth['private_key']}\npublic_key: {eth['public_key']}\n\n"
+            result += f"Bitcoin Address Info\ncoin: BITCOIN\npath: {btc['path']}\naddress: {btc['address']}\nprivate_key: {btc['private_key']}\npublic_key: {btc['public_key']}\n"
             self.result_output.setText(result)
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Wallet derivation failed:\\n{str(e)}")
+            QMessageBox.critical(self, "Error", f"Wallet derivation failed:\n{str(e)}")
 
     def start_attack_thread(self):
         t = threading.Thread(target=self.simulate_attack)
         t.start()
 
     def simulate_attack(self):
-        # 获取参数
         try:
             mode = self.mode_box.currentText()
             prefix = self.prefix_input.text().strip().split()
@@ -142,7 +181,7 @@ class WalletGUI(QWidget):
             QMessageBox.critical(self, "Input Error", str(e))
             return
 
-        # 安全估计
+        # Estimate
         estimate = estimate_brute_force_security(
             pool_size=weak_pool_size,
             word_count=word_count,
@@ -151,12 +190,12 @@ class WalletGUI(QWidget):
             allow_repeats=allow_repeats
         )
 
-        self.attack_output.append(f"=== Brute-force Estimation ===")
+        self.attack_output.append("=== Brute-force Estimation ===")
         self.attack_output.append(f"Total combinations: {estimate['total_combinations']}")
         self.attack_output.append(f"Entropy (bits): {estimate['entropy_bits']:.2f}")
-        self.attack_output.append(f"Success Probability: {estimate['success_probability']:.2e}\\n")
+        self.attack_output.append(f"Success Probability: {estimate['success_probability']:.2e}\n")
 
-        # 执行攻击
+        # Run attack
         strategy = get_attack_strategy(mode)
         result = strategy.run(
             word_count=word_count,
@@ -173,13 +212,12 @@ class WalletGUI(QWidget):
         self.attack_output.append(f"Target Address: {result['target_address']}")
         self.attack_output.append(f"Recovered Mnemonic: {result.get('mnemonic') or result.get('recovered_mnemonic')}")
         self.attack_output.append(f"Attempts: {result['attempts']}")
-        self.attack_output.append(f"Time Elapsed: {result['elapsed_time']:.2f} sec\\n")
-
+        self.attack_output.append(f"Time Elapsed: {result['time_elapsed_sec']:.2f} sec\n")
         self.progress_bar.setValue(100)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = WalletGUI()
-    window.show()
+    gui = WalletGUI()
+    gui.show()
     sys.exit(app.exec_())

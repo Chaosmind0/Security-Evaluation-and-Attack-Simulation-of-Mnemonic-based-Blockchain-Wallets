@@ -104,6 +104,22 @@ def exhaustive_brute_force_attack(
     """
     
     generator = BIP39MnemonicGenerator()
+
+    result = {
+        "word_count": word_count,
+        "weak_pool_size": weak_pool_size,
+        "pool_start": pool_start,
+        "prefix": " ".join(prefix),
+        "allow_repeats": allow_repeats,
+        "target_coin": target_coin,
+        "max_attempts": max_attempts,
+        "success": False,
+        "attempts": 0,
+        "time_elapsed_sec": 0,
+        "target_address": "",
+        "recovered_mnemonic": "",
+    }
+    
     wordlist = generator.wordlist
     pool = wordlist[pool_start : pool_start + weak_pool_size]
 
@@ -147,26 +163,25 @@ def exhaustive_brute_force_attack(
             attempts += 1
             if guess_address == target_address:
                 elapsed = time.time() - start_time
-                return {
-                    "success": True,
-                    "attempts": attempts,
-                    "elapsed_time": elapsed,
-                    "mnemonic": mnemonic_str,
-                    "target_address": target_address,
-                }
+
+                result["success"] = True
+                result["attempts"] = attempts
+                result["time_elapsed_sec"] = round(time.time() - start_time, 2)
+                result["recovered_mnemonic"] = target_mnemonic
+                return result
             if attempts >= max_attempts:
                 break
         except Exception:
             continue
 
     elapsed = time.time() - start_time
-    return {
-        "success": False,
-        "attempts": attempts,
-        "elapsed_time": elapsed,
-        "mnemonic": None,
-        "target_address": target_address,
-    }
+
+    result["success"] = False
+    result["attempts"] = attempts
+    result["time_elapsed_sec"] = elapsed
+    result["mnemonic"] = None
+    result["target_address"] = target_address
+    return result
 
 
 def simulate_brute_force_attack(
