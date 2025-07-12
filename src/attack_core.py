@@ -84,6 +84,7 @@ def exhaustive_brute_force_attack(
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
     max_attempts: int = 10**6,
+    progress_callback=None
 ) -> dict:
     """
     
@@ -97,6 +98,7 @@ def exhaustive_brute_force_attack(
         allow_repeats (bool): Allow repeated words.
         target_coin (str): "ETHEREUM" or "BITCOIN".
         max_attempts (int): Max number of attempts before stopping.
+        progress_callback (function): Callback function to report progress.
 
     Returns:
         Dictionary with the results of the attack.
@@ -150,10 +152,14 @@ def exhaustive_brute_force_attack(
     start_time = time.time()
     attempts = 0
 
-    for combo in tqdm(itertools.product(pool, repeat=remaining), total=total_combinations, desc="Exhaustive search"):
+    for idx, combo in tqdm(itertools.product(pool, repeat=remaining), total=total_combinations, desc="Exhaustive search"):
         mnemonic = prefix + list(combo)
         mnemonic_str = " ".join(mnemonic)
         try:
+            # Send progress update to callback function
+            if progress_callback:
+                progress_callback(idx + 1, max_attempts)
+
             wallet = UnsafeWalletKeyDeriver(mnemonic_str)
             guess_address = (
                 wallet.derive_eth_address()["address"]
@@ -192,6 +198,7 @@ def simulate_brute_force_attack(
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
     max_attempts: int = 10**6,
+    progress_callback=None
 ) -> dict:
     """
 
@@ -205,6 +212,7 @@ def simulate_brute_force_attack(
         allow_repeats (bool): Allow repeated words.
         target_coin (str): "ETHEREUM" or "BITCOIN".
         max_attempts (int): Max number of attempts before stopping.
+        progress_callback (function): Callback function to report progress.
 
     Returns:
         Dictionary with the results of the attack.
@@ -261,6 +269,10 @@ def simulate_brute_force_attack(
             prefix=prefix,
         )
         try:
+            # Send progress update to callback function
+            if progress_callback:
+                progress_callback(attempt, max_attempts)
+
             guess_wallet = UnsafeWalletKeyDeriver(guess_mnemonic)
             guess_address = (
                 guess_wallet.derive_eth_address()["address"]

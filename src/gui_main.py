@@ -4,11 +4,18 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QLabel, QTextEdit, QVBoxLayout,
     QHBoxLayout, QComboBox, QMessageBox, QLineEdit, QCheckBox, QProgressBar, QGroupBox, QGridLayout
 )
+from PyQt5.QtCore import QObject, pyqtSignal
+
 from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
 from unsafe_wallet_key_deriver import UnsafeWalletKeyDeriver
 from attack_factory import get_attack_strategy
 from attack_core import estimate_brute_force_security
+
+
+class WorkerSignals(QObject):
+    progress = pyqtSignal(int, int)
+    log = pyqtSignal(str)
 
 
 class WalletGUI(QWidget):
@@ -17,17 +24,18 @@ class WalletGUI(QWidget):
         self.setWindowTitle("Mnemonic Wallet Toolkit")
         self.setGeometry(200, 100, 1200, 700)
         self.generator = BIP39MnemonicGenerator()
+        self.signals = WorkerSignals()
+        self.signals.progress.connect(self.update_progress)
+        self.signals.log.connect(self.attack_output_append)
         self.init_ui()
 
     def init_ui(self):
         main_layout = QHBoxLayout()
 
-        # Left: Mnemonic generation + Wallet derivation
         left_panel = QVBoxLayout()
         left_panel.addWidget(self.build_mnemonic_group())
         left_panel.addWidget(self.build_derivation_group())
 
-        # Right: Brute-force attack simulator
         right_panel = QVBoxLayout()
         right_panel.addWidget(self.build_attack_group())
 
@@ -40,7 +48,6 @@ class WalletGUI(QWidget):
         group = QGroupBox("Mnemonic and Address")
         layout = QVBoxLayout()
 
-        # Word count + generate button
         count_layout = QHBoxLayout()
         count_layout.addWidget(QLabel("Word count"))
         self.word_count_box = QComboBox()
@@ -51,14 +58,12 @@ class WalletGUI(QWidget):
         count_layout.addWidget(self.generate_btn)
         layout.addLayout(count_layout)
 
-        # Output: mnemonic
         self.mnemonic_label = QLabel("<a href='#'>Mnemonic Phrase</a>")
         layout.addWidget(self.mnemonic_label)
         self.mnemonic_output = QTextEdit()
         self.mnemonic_output.setReadOnly(True)
         layout.addWidget(self.mnemonic_output)
 
-        # Output: seed
         self.seed_label = QLabel("<a href='#'>BIP39 Seed</a>")
         layout.addWidget(self.seed_label)
         self.seed_output = QTextEdit()
@@ -91,7 +96,6 @@ class WalletGUI(QWidget):
         group = QGroupBox("Brute-force Attack Simulator")
         layout = QGridLayout()
 
-        # Attack parameters row 1
         layout.addWidget(QLabel("Mode:"), 0, 0)
         self.mode_box = QComboBox()
         self.mode_box.addItems(["random", "exhaustive"])
@@ -110,12 +114,10 @@ class WalletGUI(QWidget):
         self.target_coin_box.addItems(["ETHEREUM", "BITCOIN"])
         layout.addWidget(self.target_coin_box, 0, 7)
 
-        # Prefix
         layout.addWidget(QLabel("Prefix (space-separated):"), 1, 0, 1, 2)
         self.prefix_input = QLineEdit("abandon abandon abandon")
         layout.addWidget(self.prefix_input, 1, 2, 1, 6)
 
-        # Row 3: word count, attempts, checkbox, start
         layout.addWidget(QLabel("Attack Mnemonic Word Count:"), 2, 0)
         self.attack_word_count_box = QComboBox()
         self.attack_word_count_box.addItems(["12", "24"])
@@ -133,7 +135,6 @@ class WalletGUI(QWidget):
         self.attack_btn.clicked.connect(self.start_attack_thread)
         layout.addWidget(self.attack_btn, 2, 6, 1, 2)
 
-        # Output & progress
         self.attack_output = QTextEdit()
         self.attack_output.setReadOnly(True)
         layout.addWidget(self.attack_output, 3, 0, 1, 8)
@@ -167,6 +168,16 @@ class WalletGUI(QWidget):
         t = threading.Thread(target=self.simulate_attack)
         t.start()
 
+    def update_progress(self, current, total):
+        percent = int((current / total) * 100)
+        self.progress_bar.setValue(percent)
+
+    def attack_output_append(self, msg):
+        self.attack_output.append(msg)
+
+    def thread_safe_progress(self, current, total):
+        self.signals.progress.emit(current, total)
+
     def simulate_attack(self):
         try:
             mode = self.mode_box.currentText()
@@ -181,7 +192,6 @@ class WalletGUI(QWidget):
             QMessageBox.critical(self, "Input Error", str(e))
             return
 
-        # Estimate
         estimate = estimate_brute_force_security(
             pool_size=weak_pool_size,
             word_count=word_count,
@@ -190,12 +200,11 @@ class WalletGUI(QWidget):
             allow_repeats=allow_repeats
         )
 
-        self.attack_output.append("=== Brute-force Estimation ===")
-        self.attack_output.append(f"Total combinations: {estimate['total_combinations']}")
-        self.attack_output.append(f"Entropy (bits): {estimate['entropy_bits']:.2f}")
-        self.attack_output.append(f"Success Probability: {estimate['success_probability']:.2e}\n")
+        self.signals.log.emit("=== Brute-force Estimation ===")
+        self.signals.log.emit(f"Total combinations: {estimate['total_combinations']}")
+        self.signals.log.emit(f"Entropy (bits): {estimate['entropy_bits']:.2f}")
+        self.signals.log.emit(f"Success Probability: {estimate['success_probability']:.2e}\n")
 
-        # Run attack
         strategy = get_attack_strategy(mode)
         result = strategy.run(
             word_count=word_count,
@@ -205,14 +214,15 @@ class WalletGUI(QWidget):
             allow_repeats=allow_repeats,
             target_coin=target_coin,
             max_attempts=max_attempts,
+            progress_callback=self.thread_safe_progress
         )
 
-        self.attack_output.append("=== Attack Result ===")
-        self.attack_output.append(f"Success: {result['success']}")
-        self.attack_output.append(f"Target Address: {result['target_address']}")
-        self.attack_output.append(f"Recovered Mnemonic: {result.get('mnemonic') or result.get('recovered_mnemonic')}")
-        self.attack_output.append(f"Attempts: {result['attempts']}")
-        self.attack_output.append(f"Time Elapsed: {result['time_elapsed_sec']:.2f} sec\n")
+        self.signals.log.emit("=== Attack Result ===")
+        self.signals.log.emit(f"Success: {result['success']}")
+        self.signals.log.emit(f"Target Address: {result['target_address']}")
+        self.signals.log.emit(f"Recovered Mnemonic: {result.get('mnemonic') or result.get('recovered_mnemonic')}")
+        self.signals.log.emit(f"Attempts: {result['attempts']}")
+        self.signals.log.emit(f"Time Elapsed: {result['time_elapsed_sec']:.2f} sec\n")
         self.progress_bar.setValue(100)
 
 
