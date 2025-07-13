@@ -2,8 +2,9 @@ import os
 import csv
 from attack_factory import get_attack_strategy
 
+
 def batch_test_and_save_report(
-    test_cases: dict, mode: str ,report_path: str = "report/brute_force_results.csv"
+    test_cases: dict, mode: str, report_path: str = "report/brute_force_results.csv"
 ) -> None:
     """
 

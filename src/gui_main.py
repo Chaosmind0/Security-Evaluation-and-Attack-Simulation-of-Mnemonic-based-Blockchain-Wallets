@@ -1,8 +1,22 @@
 import sys
 import threading
+import csv
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QPushButton, QLabel, QTextEdit, QVBoxLayout,
-    QHBoxLayout, QComboBox, QMessageBox, QLineEdit, QCheckBox, QProgressBar, QGroupBox, QGridLayout
+    QApplication,
+    QWidget,
+    QPushButton,
+    QLabel,
+    QTextEdit,
+    QVBoxLayout,
+    QHBoxLayout,
+    QComboBox,
+    QMessageBox,
+    QLineEdit,
+    QCheckBox,
+    QProgressBar,
+    QGroupBox,
+    QGridLayout,
+    QFileDialog,
 )
 from PyQt5.QtCore import QObject, pyqtSignal
 
@@ -15,11 +29,11 @@ from attack_core import estimate_brute_force_security
 
 class WorkerSignals(QObject):
     """
-    
+
     Defines the signals available from a running worker thread.
 
     """
-    
+
     progress = pyqtSignal(int, int)
     log = pyqtSignal(str)
 
@@ -27,11 +41,11 @@ class WorkerSignals(QObject):
 class WalletGUI(QWidget):
     def __init__(self):
         """
-        
+
         Constructor for the WalletGUI class.
-        
+
         """
-        
+
         super().__init__()
         self.setWindowTitle("Mnemonic Wallet Toolkit")
         self.setGeometry(200, 100, 1200, 700)
@@ -39,13 +53,14 @@ class WalletGUI(QWidget):
         self.signals = WorkerSignals()
         self.signals.progress.connect(self.update_progress)
         self.signals.log.connect(self.attack_output_append)
+        self.attack_results = []
         self.init_ui()
 
     def init_ui(self):
         """
-        
+
         Initializes the user interface.
-        
+
         """
 
         main_layout = QHBoxLayout()
@@ -64,11 +79,11 @@ class WalletGUI(QWidget):
 
     def build_mnemonic_group(self):
         """
-        
+
         Builds the group for generating and displaying the mnemonic phrase.
-        
+
         """
-        
+
         group = QGroupBox("Mnemonic and Address")
         layout = QVBoxLayout()
 
@@ -99,11 +114,11 @@ class WalletGUI(QWidget):
 
     def build_derivation_group(self):
         """
-        
+
         Builds the group for deriving the wallet addresses.
-        
+
         """
-        
+
         group = QGroupBox("Wallet Derivation")
         layout = QVBoxLayout()
 
@@ -124,11 +139,11 @@ class WalletGUI(QWidget):
 
     def build_attack_group(self):
         """
-        
+
         Builds the group for simulating the brute-force attack.
-        
+
         """
-        
+
         group = QGroupBox("Brute-force Attack Simulator")
         layout = QGridLayout()
 
@@ -169,7 +184,11 @@ class WalletGUI(QWidget):
 
         self.attack_btn = QPushButton("Generate")
         self.attack_btn.clicked.connect(self.start_attack_thread)
-        layout.addWidget(self.attack_btn, 2, 6, 1, 2)
+        layout.addWidget(self.attack_btn, 2, 6)
+
+        self.save_btn = QPushButton("Save as")
+        self.save_btn.clicked.connect(self.save_result_as_csv)
+        layout.addWidget(self.save_btn, 2, 7)
 
         self.attack_output = QTextEdit()
         self.attack_output.setReadOnly(True)
@@ -183,11 +202,11 @@ class WalletGUI(QWidget):
 
     def generate_mnemonic(self):
         """
-        
+
         Generates a new mnemonic phrase and displays it in the GUI.
-        
+
         """
-        
+
         count = int(self.word_count_box.currentText())
         mnemonic = self.generator.generate_mnemonic(count)
         self.mnemonic_output.setText(mnemonic)
@@ -196,11 +215,11 @@ class WalletGUI(QWidget):
 
     def derive_wallet(self):
         """
-        
+
         Derives the wallet addresses from the given mnemonic phrase and displays them in the GUI.
-        
+
         """
-        
+
         mnemonic = self.mnemonic_input.toPlainText().strip()
         try:
             deriver = WalletKeyDeriver(mnemonic)
@@ -214,49 +233,75 @@ class WalletGUI(QWidget):
 
     def start_attack_thread(self):
         """
-        
+
         Starts a new thread to simulate the brute-force attack.
-        
+
         """
-        
+
         t = threading.Thread(target=self.simulate_attack)
         t.start()
 
     def update_progress(self, current: int, total: int):
         """
-        
+
         Updates the progress bar in the GUI.
-        
+
         """
-        
+
         percent = int((current / total) * 100)
         self.progress_bar.setValue(percent)
 
     def attack_output_append(self, msg: str):
         """
-            
+
         Appends a message to the attack output in the GUI.
-        
+
         """
-        
+
         self.attack_output.append(msg)
 
     def thread_safe_progress(self, current: int, total: int):
         """
-        
+
         Emits a progress signal from a thread-safe context.
-        
+
         """
-        
+
         self.signals.progress.emit(current, total)
+
+    def save_result_as_csv(self):
+        """
+
+        Saves the attack results as a CSV file.
+
+        """
+
+        if not self.attack_results:
+            QMessageBox.warning(self, "Warning", "No attack result to save.")
+            return
+
+        path, _ = QFileDialog.getSaveFileName(self, "Save CSV", "", "CSV Files (*.csv)")
+        if not path:
+            return
+
+        try:
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                fieldnames = self.attack_results[0].keys()
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                for r in self.attack_results:
+                    writer.writerow(r)
+            QMessageBox.information(self, "Success", f"All results saved to {path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to save file:\n{str(e)}")
 
     def simulate_attack(self):
         """
-        
+
         Simulates the brute-force attack and displays the result in the GUI.
-        
+
         """
-        
+
         try:
             mode = self.mode_box.currentText()
             prefix = self.prefix_input.text().strip().split()
@@ -275,7 +320,7 @@ class WalletGUI(QWidget):
             word_count=word_count,
             prefix_length=len(prefix),
             max_attempts=max_attempts,
-            allow_repeats=allow_repeats
+            allow_repeats=allow_repeats,
         )
 
         self.signals.log.emit("=== Brute-force Estimation ===")
@@ -292,13 +337,17 @@ class WalletGUI(QWidget):
             allow_repeats=allow_repeats,
             target_coin=target_coin,
             max_attempts=max_attempts,
-            progress_callback=self.thread_safe_progress
+            progress_callback=self.thread_safe_progress,
         )
+
+        self.attack_results.append(result)
 
         self.signals.log.emit("=== Attack Result ===")
         self.signals.log.emit(f"Success: {result['success']}")
         self.signals.log.emit(f"Target Address: {result['target_address']}")
-        self.signals.log.emit(f"Recovered Mnemonic: {result.get('mnemonic') or result.get('recovered_mnemonic')}")
+        self.signals.log.emit(
+            f"Recovered Mnemonic: {result.get('mnemonic') or result.get('recovered_mnemonic')}"
+        )
         self.signals.log.emit(f"Attempts: {result['attempts']}")
         self.signals.log.emit(f"Time Elapsed: {result['time_elapsed_sec']:.2f} sec\n")
         self.progress_bar.setValue(100)

@@ -6,7 +6,10 @@ import itertools
 import math
 from typing import List
 
-def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, pool_start: int) -> None:
+
+def check_parameters(
+    prefix: list[str], word_count: int, weak_pool_size: int, pool_start: int
+) -> None:
     """
 
     Checks the validity of the attack parameters.
@@ -16,7 +19,7 @@ def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, po
         word_count (int): Number of words in the mnemonic.
         weak_pool_size (int): Size of weak entropy pool.
         pool_start (int): Start index of weak pool.
-    
+
     Returns:
         None.
 
@@ -29,9 +32,15 @@ def check_parameters(prefix: list[str], word_count: int, weak_pool_size: int, po
     assert pool_start + weak_pool_size <= 2048, "Pool start + weak pool size must be <= 2048"
 
 
-def estimate_brute_force_security(pool_size: int, word_count: int, prefix_length: int, max_attempts: int, allow_repeats: bool = True) -> dict:
+def estimate_brute_force_security(
+    pool_size: int,
+    word_count: int,
+    prefix_length: int,
+    max_attempts: int,
+    allow_repeats: bool = True,
+) -> dict:
     """
-    
+
     Calculates the success probability and entropy of a brute-force attack.
 
     Parameters:
@@ -45,14 +54,14 @@ def estimate_brute_force_security(pool_size: int, word_count: int, prefix_length
         Dictionary with the results of the attack.
 
     """
-    
+
     r = word_count - prefix_length
     N = pool_size
     T = max_attempts
 
     # Total combinations calculation
     if allow_repeats:
-        total_combinations = N ** r
+        total_combinations = N**r
     else:
         if N < r:
             return {"success_probability": 0, "entropy": 0}
@@ -71,7 +80,7 @@ def estimate_brute_force_security(pool_size: int, word_count: int, prefix_length
     return {
         "total_combinations": total_combinations,
         "success_probability": success_prob,
-        "entropy_bits": entropy
+        "entropy_bits": entropy,
     }
 
 
@@ -84,10 +93,10 @@ def exhaustive_brute_force_attack(
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
     max_attempts: int = 10**6,
-    progress_callback=None
+    progress_callback=None,
 ) -> dict:
     """
-    
+
     Simulates an exhaustive brute-force attack to recover a low-entropy wallet mnemonic.
 
     Parameters:
@@ -104,7 +113,7 @@ def exhaustive_brute_force_attack(
         Dictionary with the results of the attack.
 
     """
-    
+
     generator = BIP39MnemonicGenerator()
 
     result = {
@@ -121,7 +130,7 @@ def exhaustive_brute_force_attack(
         "target_address": "",
         "recovered_mnemonic": "",
     }
-    
+
     wordlist = generator.wordlist
     pool = wordlist[pool_start : pool_start + weak_pool_size]
 
@@ -152,7 +161,13 @@ def exhaustive_brute_force_attack(
     start_time = time.time()
     attempts = 0
 
-    for idx, combo in enumerate(tqdm(itertools.product(pool, repeat=remaining), total=total_combinations, desc="Exhaustive search")):
+    for idx, combo in enumerate(
+        tqdm(
+            itertools.product(pool, repeat=remaining),
+            total=total_combinations,
+            desc="Exhaustive search",
+        )
+    ):
 
         mnemonic = prefix + list(combo)
         mnemonic_str = " ".join(mnemonic)
@@ -199,7 +214,7 @@ def simulate_brute_force_attack(
     allow_repeats: bool = True,
     target_coin: str = "ETHEREUM",
     max_attempts: int = 10**6,
-    progress_callback=None
+    progress_callback=None,
 ) -> dict:
     """
 
