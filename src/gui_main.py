@@ -323,6 +323,12 @@ class WalletGUI(QWidget):
             target_coin = self.target_coin_box.currentText()
             max_attempts = int(self.max_attempts_input.text())
             word_count = int(self.attack_word_count_box.currentText())
+        except Exception as e:
+            self.signals.error.emit(f"Input Error: {str(e)}")
+            return
+
+        
+        try:
             check_parameters(prefix, word_count, weak_pool_size, pool_start)
         except AssertionError as ae:
             self.signals.error.emit(f"Parameter Error: {str(ae)}")
