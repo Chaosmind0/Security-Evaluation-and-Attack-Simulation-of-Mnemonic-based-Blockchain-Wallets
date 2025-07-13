@@ -22,7 +22,6 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
-from unsafe_wallet_key_deriver import UnsafeWalletKeyDeriver
 from attack_factory import get_attack_strategy
 from attack_core import estimate_brute_force_security
 
