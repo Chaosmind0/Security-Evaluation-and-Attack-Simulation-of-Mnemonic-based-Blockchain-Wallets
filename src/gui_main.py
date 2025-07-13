@@ -14,12 +14,24 @@ from attack_core import estimate_brute_force_security
 
 
 class WorkerSignals(QObject):
+    """
+    
+    Defines the signals available from a running worker thread.
+
+    """
+    
     progress = pyqtSignal(int, int)
     log = pyqtSignal(str)
 
 
 class WalletGUI(QWidget):
     def __init__(self):
+        """
+        
+        Constructor for the WalletGUI class.
+        
+        """
+        
         super().__init__()
         self.setWindowTitle("Mnemonic Wallet Toolkit")
         self.setGeometry(200, 100, 1200, 700)
@@ -30,6 +42,12 @@ class WalletGUI(QWidget):
         self.init_ui()
 
     def init_ui(self):
+        """
+        
+        Initializes the user interface.
+        
+        """
+
         main_layout = QHBoxLayout()
 
         left_panel = QVBoxLayout()
@@ -45,6 +63,12 @@ class WalletGUI(QWidget):
         self.setLayout(main_layout)
 
     def build_mnemonic_group(self):
+        """
+        
+        Builds the group for generating and displaying the mnemonic phrase.
+        
+        """
+        
         group = QGroupBox("Mnemonic and Address")
         layout = QVBoxLayout()
 
@@ -74,6 +98,12 @@ class WalletGUI(QWidget):
         return group
 
     def build_derivation_group(self):
+        """
+        
+        Builds the group for deriving the wallet addresses.
+        
+        """
+        
         group = QGroupBox("Wallet Derivation")
         layout = QVBoxLayout()
 
@@ -93,6 +123,12 @@ class WalletGUI(QWidget):
         return group
 
     def build_attack_group(self):
+        """
+        
+        Builds the group for simulating the brute-force attack.
+        
+        """
+        
         group = QGroupBox("Brute-force Attack Simulator")
         layout = QGridLayout()
 
@@ -146,6 +182,12 @@ class WalletGUI(QWidget):
         return group
 
     def generate_mnemonic(self):
+        """
+        
+        Generates a new mnemonic phrase and displays it in the GUI.
+        
+        """
+        
         count = int(self.word_count_box.currentText())
         mnemonic = self.generator.generate_mnemonic(count)
         self.mnemonic_output.setText(mnemonic)
@@ -153,6 +195,12 @@ class WalletGUI(QWidget):
         self.seed_output.setText(deriver.get_seed_hex())
 
     def derive_wallet(self):
+        """
+        
+        Derives the wallet addresses from the given mnemonic phrase and displays them in the GUI.
+        
+        """
+        
         mnemonic = self.mnemonic_input.toPlainText().strip()
         try:
             deriver = WalletKeyDeriver(mnemonic)
@@ -165,20 +213,50 @@ class WalletGUI(QWidget):
             QMessageBox.critical(self, "Error", f"Wallet derivation failed:\n{str(e)}")
 
     def start_attack_thread(self):
+        """
+        
+        Starts a new thread to simulate the brute-force attack.
+        
+        """
+        
         t = threading.Thread(target=self.simulate_attack)
         t.start()
 
-    def update_progress(self, current, total):
+    def update_progress(self, current: int, total: int):
+        """
+        
+        Updates the progress bar in the GUI.
+        
+        """
+        
         percent = int((current / total) * 100)
         self.progress_bar.setValue(percent)
 
-    def attack_output_append(self, msg):
+    def attack_output_append(self, msg: str):
+        """
+            
+        Appends a message to the attack output in the GUI.
+        
+        """
+        
         self.attack_output.append(msg)
 
-    def thread_safe_progress(self, current, total):
+    def thread_safe_progress(self, current: int, total: int):
+        """
+        
+        Emits a progress signal from a thread-safe context.
+        
+        """
+        
         self.signals.progress.emit(current, total)
 
     def simulate_attack(self):
+        """
+        
+        Simulates the brute-force attack and displays the result in the GUI.
+        
+        """
+        
         try:
             mode = self.mode_box.currentText()
             prefix = self.prefix_input.text().strip().split()
