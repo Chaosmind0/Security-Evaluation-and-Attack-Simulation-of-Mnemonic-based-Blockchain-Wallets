@@ -82,13 +82,13 @@ class WalletGUI(QWidget):
         count_layout.addWidget(self.generate_btn)
         layout.addLayout(count_layout)
 
-        self.mnemonic_label = QLabel("<a href='#'>Mnemonic Phrase</a>")
+        self.mnemonic_label = QLabel("Mnemonic Phrase")
         layout.addWidget(self.mnemonic_label)
         self.mnemonic_output = QTextEdit()
         self.mnemonic_output.setReadOnly(True)
         layout.addWidget(self.mnemonic_output)
 
-        self.seed_label = QLabel("<a href='#'>BIP39 Seed</a>")
+        self.seed_label = QLabel("BIP39 Seed")
         layout.addWidget(self.seed_label)
         self.seed_output = QTextEdit()
         self.seed_output.setReadOnly(True)

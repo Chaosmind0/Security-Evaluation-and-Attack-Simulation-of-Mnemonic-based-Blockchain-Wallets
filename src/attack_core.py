@@ -152,7 +152,8 @@ def exhaustive_brute_force_attack(
     start_time = time.time()
     attempts = 0
 
-    for idx, combo in tqdm(itertools.product(pool, repeat=remaining), total=total_combinations, desc="Exhaustive search"):
+    for idx, combo in enumerate(tqdm(itertools.product(pool, repeat=remaining), total=total_combinations, desc="Exhaustive search")):
+
         mnemonic = prefix + list(combo)
         mnemonic_str = " ".join(mnemonic)
         try:
