@@ -24,6 +24,7 @@ from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
 from attack_factory import get_attack_strategy
 from attack_core import estimate_brute_force_security
+from attack_core import check_parameters
 
 
 class WorkerSignals(QObject):
@@ -35,6 +36,7 @@ class WorkerSignals(QObject):
 
     progress = pyqtSignal(int, int)
     log = pyqtSignal(str)
+    error = pyqtSignal(str) 
 
 
 class WalletGUI(QWidget):
@@ -53,6 +55,7 @@ class WalletGUI(QWidget):
         self.signals.progress.connect(self.update_progress)
         self.signals.log.connect(self.attack_output_append)
         self.attack_results = []
+        self.signals.error.connect(self.show_error_message)
         self.init_ui()
 
     def init_ui(self):
@@ -294,6 +297,16 @@ class WalletGUI(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to save file:\n{str(e)}")
 
+    def show_error_message(self, msg: str):
+        """
+        
+        Displays an error message in the GUI.
+        
+        """
+        
+        QMessageBox.critical(self, "Error", msg)
+
+
     def simulate_attack(self):
         """
 
@@ -310,8 +323,9 @@ class WalletGUI(QWidget):
             target_coin = self.target_coin_box.currentText()
             max_attempts = int(self.max_attempts_input.text())
             word_count = int(self.attack_word_count_box.currentText())
-        except Exception as e:
-            QMessageBox.critical(self, "Input Error", str(e))
+            check_parameters(prefix, word_count, weak_pool_size, pool_start)
+        except AssertionError as ae:
+            self.signals.error.emit(f"Parameter Error: {str(ae)}")
             return
 
         estimate = estimate_brute_force_security(
