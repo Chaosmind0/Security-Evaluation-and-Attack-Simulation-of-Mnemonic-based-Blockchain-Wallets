@@ -27,7 +27,7 @@ def check_parameters(
 
     assert len(prefix) <= word_count, "Prefix length exceeds word count"
     assert word_count in [12, 24], "Word count must be 12 or 24"
-    assert weak_pool_size <= 2048, "Weak pool size must be <= 2048"
+    assert 0 < weak_pool_size <= 2048, "Weak pool size must be smaller than 2048 and bigger than 0"
     assert pool_start >= 0, "Pool start index must be >= 0"
     assert pool_start + weak_pool_size <= 2048, "Pool start + weak pool size must be <= 2048"
 
