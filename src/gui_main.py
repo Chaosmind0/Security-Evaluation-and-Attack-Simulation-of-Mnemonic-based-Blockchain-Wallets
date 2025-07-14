@@ -36,7 +36,7 @@ class WorkerSignals(QObject):
 
     progress = pyqtSignal(int, int)
     log = pyqtSignal(str)
-    error = pyqtSignal(str) 
+    error = pyqtSignal(str)
 
 
 class WalletGUI(QWidget):
@@ -299,13 +299,12 @@ class WalletGUI(QWidget):
 
     def show_error_message(self, msg: str):
         """
-        
-        Displays an error message in the GUI.
-        
-        """
-        
-        QMessageBox.critical(self, "Error", msg)
 
+        Displays an error message in the GUI.
+
+        """
+
+        QMessageBox.critical(self, "Error", msg)
 
     def simulate_attack(self):
         """
@@ -327,7 +326,6 @@ class WalletGUI(QWidget):
             self.signals.error.emit(f"Input Error: {str(e)}")
             return
 
-        
         try:
             check_parameters(prefix, word_count, weak_pool_size, pool_start)
         except AssertionError as ae:
