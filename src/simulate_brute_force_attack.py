@@ -86,6 +86,6 @@ if __name__ == "__main__":
                             "allow_repeats": allow_repeats,
                             "target_coin": target_coin,
                         }
-                        test_cases.extend(generate_test_cases(case, repeat=4))
+                        test_cases.extend(generate_multiple_test_cases(case, repeat=4))
 
     batch_test_and_save_report(test_cases, "exhaustive")
