@@ -32,12 +32,79 @@ def check_parameters(
     assert pool_start + weak_pool_size <= 2048, "Pool start + weak pool size must be <= 2048"
 
 
+def format_time_cost(seconds: float) -> str:
+    """
+
+    Converts seconds into a human-readable string, choosing the most appropriate unit.
+
+    Parameters:
+        seconds (float): Time in seconds.
+
+    Returns:
+        str: Human-readable string.
+
+    """
+
+    if seconds < 60:
+        return f"{seconds:.2f} seconds"
+    elif seconds < 3600:
+        return f"{seconds / 60:.2f} minutes"
+    elif seconds < 86400:
+        return f"{seconds / 3600:.2f} hours"
+    elif seconds < 30 * 86400:
+        return f"{seconds / 86400:.2f} days"
+    elif seconds < 365 * 86400:
+        return f"{seconds / (30 * 86400):.2f} months"
+    else:
+        return f"{seconds / (365 * 86400):.2f} years"
+
+
+def classify_security_level(
+    time_sec: float, pool_size: int, r: int
+) -> tuple[str, float, float, str]:
+    """
+
+    Classifies the security level based on estimated attack time and entropy.
+
+    Parameters:
+        time_sec (float): Estimated attack time in seconds.
+        pool_size (int): Size of weak entropy pool.
+        r (int): Number of words in the mnemonic minus the prefix length.
+
+    Returns:
+        Tuple with the security level, entropy, time cost, and formatted time cost.
+
+    """
+
+    entropy = r * math.log2(pool_size) if pool_size > 0 else 0
+
+    # Thresholds
+    month_sec = 30 * 86400
+    year_sec = 365 * 86400
+
+    # Determine security level (take the lower one if time/entropy levels differ)
+    if time_sec < month_sec or entropy < 40:
+        level = "Too Weak"
+    elif time_sec < year_sec or entropy < 60:
+        level = "Weak"
+    elif time_sec < 100 * year_sec or entropy < 80:
+        level = "Medium"
+    else:
+        level = "Strong"
+
+    # Format time into a readable string
+    formatted_time = format_time_cost(time_sec)
+
+    return level, entropy, time_sec, formatted_time
+
+
 def estimate_brute_force_security(
     pool_size: int,
     word_count: int,
     prefix_length: int,
     max_attempts: int,
     allow_repeats: bool = True,
+    attempts_per_second: int = 10**10,
 ) -> dict:
     """
 
@@ -49,6 +116,7 @@ def estimate_brute_force_security(
         prefix_length (int): Length of known prefix in the mnemonic.
         max_attempts (int): Max number of attempts before stopping.
         allow_repeats (bool): Allow repeated words.
+        attempts_per_second  (int): Speed of decryption algorithm (in bits/second).
 
     Returns:
         Dictionary with the results of the attack.
@@ -70,8 +138,8 @@ def estimate_brute_force_security(
     # Success probability calculation
     success_prob = T / total_combinations
 
-    # Entropy value calculation (in bits)
-    entropy = r * math.log2(N) if N > 0 else 0
+    time_cost_sec = total_combinations / attempts_per_second
+    security_level, entropy, time_cost_str = classify_security_level(time_cost_sec, pool_size, r)
 
     print("Total combinations: " + str(total_combinations))
     print("Success probability: " + str(success_prob))
@@ -81,6 +149,8 @@ def estimate_brute_force_security(
         "total_combinations": total_combinations,
         "success_probability": success_prob,
         "entropy_bits": entropy,
+        "time cost": time_cost_str,
+        "security_level": security_level,
     }
 
 

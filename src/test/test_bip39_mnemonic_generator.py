@@ -104,7 +104,9 @@ class TestBIP39MnemonicGenerator(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.generator.generate_weak_mnemonic(
-                word_count=12, weak_pool_size=100, pool_start=2000  # Overflows the wordlist
+                word_count=12,
+                weak_pool_size=100,
+                pool_start=2000,  # Overflows the wordlist
             )
 
 
