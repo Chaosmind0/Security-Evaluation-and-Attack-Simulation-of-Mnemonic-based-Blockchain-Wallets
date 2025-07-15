@@ -53,7 +53,7 @@ def batch_test_and_save_report(
             )
 
 
-def generate_test_cases(base_case: dict, repeat: int = 4) -> list[dict]:
+def generate_multiple_test_cases(base_case: dict, repeat: int = 4) -> list[dict]:
     """
 
     Uses a base case to generate multiple test cases with different parameters.
