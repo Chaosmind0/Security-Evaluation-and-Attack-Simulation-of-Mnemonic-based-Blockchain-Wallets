@@ -102,7 +102,7 @@ def estimate_brute_force_security(
     pool_size: int,
     word_count: int,
     prefix_length: int,
-    max_attempts: int,
+    max_attempts: int = 10**6,
     allow_repeats: bool = True,
     attempts_per_second: int = 10**10,
 ) -> dict:
@@ -139,7 +139,9 @@ def estimate_brute_force_security(
     success_prob = T / total_combinations
 
     time_cost_sec = total_combinations / attempts_per_second
-    security_level, entropy, time_sec, time_cost_str = classify_security_level(time_cost_sec, pool_size, r)
+    security_level, entropy, time_sec, time_cost_str = classify_security_level(
+        time_cost_sec, pool_size, r
+    )
 
     print("Total combinations: " + str(total_combinations))
     print("Success probability: " + str(success_prob))
@@ -151,7 +153,7 @@ def estimate_brute_force_security(
         "entropy_bits": entropy,
         "time cost str": time_cost_str,
         "time cost": time_sec,
-        "security_level": security_level,
+        "security level": security_level,
     }
 
 

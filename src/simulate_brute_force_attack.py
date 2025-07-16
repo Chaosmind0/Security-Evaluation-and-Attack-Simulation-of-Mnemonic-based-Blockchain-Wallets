@@ -5,7 +5,9 @@ from attack_core import estimate_brute_force_security
 
 
 def actual_decryption_test_report(
-    test_cases: dict, mode: str, report_path: str = "report/Brute force actual decryption results.csv"
+    test_cases: dict,
+    mode: str,
+    report_path: str = "report/Brute force actual decryption results.csv",
 ) -> None:
     """
 
@@ -58,7 +60,7 @@ def theoretical_deciphering_test_report(
     test_cases: dict, report_path: str = "report/Brute force theoretical results.csv"
 ) -> None:
     """
-    
+
     Runs a batch of test cases and saves the results to a CSV file.
 
     Parameters:
@@ -69,7 +71,7 @@ def theoretical_deciphering_test_report(
         None.
 
     """
-    
+
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
 
     with open(report_path, mode="w", newline="", encoding="utf-8") as f:
@@ -78,13 +80,12 @@ def theoretical_deciphering_test_report(
             fieldnames=[
                 "word_count",
                 "weak_pool_size",
-                "pool_start",
-                "prefix",
+                "prefix_length",
                 "allow_repeats",
                 "entropy_bits",
                 "time cost str",
                 "time cost",
-                "security_level",
+                "security level",
             ],
         )
         writer.writeheader()
@@ -92,9 +93,18 @@ def theoretical_deciphering_test_report(
         for case in test_cases:
             print(f"Running test case: {case}")
             result = estimate_brute_force_security(**case)
-            writer.writerow(result)
+            information = {}
+            information["word_count"] = case["word_count"]
+            information["weak_pool_size"] = case["pool_size"]
+            information["prefix_length"] = case["prefix_length"]
+            information["allow_repeats"] = case["allow_repeats"]
+            information["entropy_bits"] = result["entropy_bits"]
+            information["time cost str"] = result["time cost str"]
+            information["time cost"] = result["time cost"]
+            information["security level"] = result["security level"]
+            writer.writerow(information)
             print(
-                f"Test completed. Entropy (bits): {result['entropy_bits']:.2f}, Time cost: {result['time cost str']}, Security level: {result['security_level']}\n"
+                f"Test completed. Entropy (bits): {information['entropy_bits']:.2f}, Time cost: {information['time cost str']}, Security level: {information['security level']}\n"
             )
 
 
@@ -151,12 +161,9 @@ if __name__ == "__main__":
                     for allow_repeats in [True, False]:
                         case = {
                             "word_count": word_count,
-                            "weak_pool_size": weak_pool_size,
-                            "pool_start": 0,
                             "prefix_length": prefix_len,
+                            "pool_size": weak_pool_size,
                             "allow_repeats": allow_repeats,
                         }
                         test_cases_2.append(case)
         theoretical_deciphering_test_report(test_cases_2)
-                        
-
