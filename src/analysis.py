@@ -5,6 +5,18 @@ import os
 
 def theoretical_results_analysis(path_to_csv: str = "report/Brute force theoretical results.csv", 
                                  output_dir: str = "report/images"):
+    """
+    
+    Plots the results of the theoretical analysis of the brute-force attack.
+
+    Parameters:
+        path_to_csv (str): Path to the CSV file containing the results.
+        output_dir (str): Path to the output directory for the plots.
+    
+    Returns:
+        None.
+
+    """
     
     os.makedirs(output_dir, exist_ok=True)
 
@@ -62,4 +74,10 @@ def theoretical_results_analysis(path_to_csv: str = "report/Brute force theoreti
 
 
 if __name__ == "__main__":
+    """
+    
+    Runs the analysis of the theoretical of the brute-force attack.
+
+    """
+    
     theoretical_results_analysis("report/Brute force theoretical results.csv", "report/images")
