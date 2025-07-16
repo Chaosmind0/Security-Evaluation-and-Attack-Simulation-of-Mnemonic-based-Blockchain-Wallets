@@ -28,7 +28,10 @@ class TestAttackCore(unittest.TestCase):
 
         try:
             check_parameters(
-                prefix=["abandon", "abandon"], word_count=12, weak_pool_size=64, pool_start=0
+                prefix=["abandon", "abandon"],
+                word_count=12,
+                weak_pool_size=64,
+                pool_start=0,
             )
         except AssertionError:
             self.fail("check_parameters() raised AssertionError unexpectedly!")
@@ -51,7 +54,11 @@ class TestAttackCore(unittest.TestCase):
         """
 
         result = estimate_brute_force_security(
-            pool_size=64, word_count=12, prefix_length=3, max_attempts=1000, allow_repeats=True
+            pool_size=64,
+            word_count=12,
+            prefix_length=3,
+            max_attempts=1000,
+            allow_repeats=True,
         )
         self.assertIn("entropy_bits", result)
         self.assertGreater(result["entropy_bits"], 0)
