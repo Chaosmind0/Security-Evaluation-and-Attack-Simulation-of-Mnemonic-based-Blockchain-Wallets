@@ -1,10 +1,11 @@
 import os
 import csv
 from attack_factory import get_attack_strategy
+from attack_core import estimate_brute_force_security
 
 
-def batch_test_and_save_report(
-    test_cases: dict, mode: str, report_path: str = "report/brute_force_results.csv"
+def actual_decryption_test_report(
+    test_cases: dict, mode: str, report_path: str = "report/Brute force actual decryption results.csv"
 ) -> None:
     """
 
@@ -53,6 +54,50 @@ def batch_test_and_save_report(
             )
 
 
+def theoretical_deciphering_test_report(
+    test_cases: dict, report_path: str = "report/Brute force theoretical results.csv"
+) -> None:
+    """
+    
+    Runs a batch of test cases and saves the results to a CSV file.
+
+    Parameters:
+        test_cases (list[dict]): List of test cases.
+        report_path (str): Path to save the report.
+
+    Returns:
+        None.
+
+    """
+    
+    os.makedirs(os.path.dirname(report_path), exist_ok=True)
+
+    with open(report_path, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "word_count",
+                "weak_pool_size",
+                "pool_start",
+                "prefix",
+                "allow_repeats",
+                "entropy_bits",
+                "time cost str",
+                "time cost",
+                "security_level",
+            ],
+        )
+        writer.writeheader()
+
+        for case in test_cases:
+            print(f"Running test case: {case}")
+            result = estimate_brute_force_security(**case)
+            writer.writerow(result)
+            print(
+                f"Test completed. Entropy (bits): {result['entropy_bits']:.2f}, Time cost: {result['time cost str']}, Security level: {result['security_level']}\n"
+            )
+
+
 def generate_multiple_test_cases(base_case: dict, repeat: int = 4) -> list[dict]:
     """
 
@@ -71,21 +116,47 @@ def generate_multiple_test_cases(base_case: dict, repeat: int = 4) -> list[dict]
 
 
 if __name__ == "__main__":
-    test_cases = []
+    test_cases_1 = []
 
-    for word_count in [12, 24]:
-        for weak_pool_size in [32, 64]:
-            for prefix_len in range(3, 7):
-                for allow_repeats in [True, False]:
-                    for target_coin in ["ETHEREUM", "BITCOIN"]:
+    # Conduct Experiment One: Actual Decryption Test
+    Test_1 = False
+
+    if Test_1:
+        for word_count in [12, 24]:
+            for weak_pool_size in [32, 64]:
+                for prefix_len in range(3, 7):
+                    for allow_repeats in [True, False]:
+                        for target_coin in ["ETHEREUM", "BITCOIN"]:
+                            case = {
+                                "word_count": word_count,
+                                "weak_pool_size": weak_pool_size,
+                                "pool_start": 0,
+                                "prefix": ["abandon"] * prefix_len,
+                                "allow_repeats": allow_repeats,
+                                "target_coin": target_coin,
+                            }
+                            test_cases_1.extend(generate_multiple_test_cases(case, repeat=4))
+
+        actual_decryption_test_report(test_cases_1, "exhaustive")
+
+    # Conduct Experiment Two: Theoretical Deciphering Test
+    Test_2 = True
+
+    test_cases_2 = []
+
+    if Test_2:
+        for word_count in [12, 24]:
+            for weak_pool_size in [32, 64, 128]:
+                for prefix_len in range(3, 7):
+                    for allow_repeats in [True, False]:
                         case = {
                             "word_count": word_count,
                             "weak_pool_size": weak_pool_size,
                             "pool_start": 0,
-                            "prefix": ["abandon"] * prefix_len,
+                            "prefix_length": prefix_len,
                             "allow_repeats": allow_repeats,
-                            "target_coin": target_coin,
                         }
-                        test_cases.extend(generate_multiple_test_cases(case, repeat=4))
+                        test_cases_2.append(case)
+        theoretical_deciphering_test_report(test_cases_2)
+                        
 
-    batch_test_and_save_report(test_cases, "exhaustive")
