@@ -2,3 +2,6 @@ bip-utils>=2.7.0
 requests
 tqdm>=4.64  
 PyQt5>=5.15
+pandas>=1.4.1
+matplotlib>=3.5.1
+seaborn>=0.11.2
