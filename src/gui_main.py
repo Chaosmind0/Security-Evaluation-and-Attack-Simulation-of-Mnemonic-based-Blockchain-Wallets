@@ -22,10 +22,12 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import QObject, pyqtSignal
 
-from src.bip39_mnemonic_generator import BIP39MnemonicGenerator
-from src.wallet_key_deriver import WalletKeyDeriver
-from src.attack_factory import get_attack_strategy
-from src.attack_core import estimate_brute_force_security, check_parameters
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
+from bip39_mnemonic_generator import BIP39MnemonicGenerator
+from wallet_key_deriver import WalletKeyDeriver
+from attack_factory import get_attack_strategy
+from attack_core import estimate_brute_force_security, check_parameters
 
 
 def resource_path(relative_path: str):
