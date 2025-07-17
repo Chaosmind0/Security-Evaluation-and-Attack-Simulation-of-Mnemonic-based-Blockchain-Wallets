@@ -5,7 +5,8 @@ import pkgutil
 def resource_path(relative_path: str) -> str:
     """ 
     
-    Get absolute path to resource, works for dev and for PyInstaller 
+    Always read resource from external directory next to the .exe,
+    fallback to development path if running as script.
 
     parameters:
         relative_path: path relative to the current module 
@@ -15,8 +16,11 @@ def resource_path(relative_path: str) -> str:
     
     """
     
-    try:
-        base_path = sys._MEIPASS
-    except AttributeError:
+    if hasattr(sys, "_MEIPASS"):
+        # The directory where the exe file is located when PyInstaller packages and runs.
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # General development environment
         base_path = os.path.abspath(os.path.dirname(__file__))
+
     return os.path.join(base_path, relative_path)
