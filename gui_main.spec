@@ -5,7 +5,7 @@ a = Analysis(
     ['src\\gui_main.py'],
     pathex=[],
     binaries=[],
-    datas=[('data/english.txt', 'data'), ('report', 'report')],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

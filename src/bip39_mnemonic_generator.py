@@ -2,7 +2,6 @@ import os
 import hashlib
 import random
 import requests
-from gui_main import resource_path
 
 class BIP39MnemonicGenerator:
     """

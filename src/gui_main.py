@@ -1,6 +1,11 @@
 import os
 import sys
 import pkgutil
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+src_path = os.path.join(project_root, "src")
+sys.path.insert(0, src_path)
+
 import threading
 import csv
 from PyQt5.QtWidgets import (
@@ -22,7 +27,6 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import QObject, pyqtSignal
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
