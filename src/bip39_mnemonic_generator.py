@@ -35,6 +35,9 @@ class BIP39MnemonicGenerator:
         Parameters
             save_path: Path to save the wordlist file.
 
+        Returns:
+            None
+
         """
 
         # BIP39 English wordlist URL
