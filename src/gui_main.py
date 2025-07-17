@@ -6,6 +6,8 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
 
+from utils import resource_path
+
 import threading
 import csv
 from PyQt5.QtWidgets import (
@@ -32,33 +34,6 @@ from bip39_mnemonic_generator import BIP39MnemonicGenerator
 from wallet_key_deriver import WalletKeyDeriver
 from attack_factory import get_attack_strategy
 from attack_core import estimate_brute_force_security, check_parameters
-
-
-def resource_path(relative_path: str):
-    """ 
-    
-    Get absolute path to resource, works for dev and for PyInstaller 
-    
-    """
-    
-    try:
-        base_path = sys._MEIPASS  # for PyInstaller
-    except Exception:
-        base_path = os.path.abspath(".")
-    
-    full_path = os.path.join(base_path, relative_path)
-
-    if not os.path.exists(full_path):
-        # Try to load from package (fallback)
-        data = pkgutil.get_data('', relative_path)
-        if data:
-            temp_path = os.path.join("/tmp", relative_path)
-            os.makedirs(os.path.dirname(temp_path), exist_ok=True)
-            with open(temp_path, "wb") as f:
-                f.write(data)
-            return temp_path
-
-    return full_path
 
 
 class WorkerSignals(QObject):

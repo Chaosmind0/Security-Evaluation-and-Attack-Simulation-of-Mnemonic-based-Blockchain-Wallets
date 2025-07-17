@@ -3,6 +3,8 @@ import hashlib
 import random
 import requests
 
+from utils import resource_path
+
 class BIP39MnemonicGenerator:
     """
 
