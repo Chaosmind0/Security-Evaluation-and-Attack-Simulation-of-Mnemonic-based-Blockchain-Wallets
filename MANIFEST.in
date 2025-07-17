@@ -1,0 +1,5 @@
+include README.md
+include requirements.txt
+include data/english.txt
+recursive-include src/report *.csv
+recursive-include src/report/images *.png *.jpg
