@@ -26,7 +26,7 @@ class BIP39MnemonicGenerator:
     def __init__(self):
         self.wordlist = self.load_wordlist()
 
-    def download_bip39_wordlist(save_path="data/english.txt"):
+    def download_bip39_wordlist(self, save_path: str = "data/english.txt") -> None:
         """
 
         Downloads the BIP39 English wordlist from the official GitHub repository.
