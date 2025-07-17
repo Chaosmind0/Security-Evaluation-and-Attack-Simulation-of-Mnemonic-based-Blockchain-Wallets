@@ -2,7 +2,7 @@ import os
 import hashlib
 import random
 import requests
-
+from gui_main import resource_path
 
 class BIP39MnemonicGenerator:
     """
@@ -62,7 +62,7 @@ class BIP39MnemonicGenerator:
 
         """
 
-        relative_path = "../data/english.txt"
+        relative_path = resource_path("data/english.txt")
         path = os.path.join(os.path.dirname(__file__), relative_path)
 
         # If the wordlist file doesn't exist, download it
