@@ -64,15 +64,14 @@ class BIP39MnemonicGenerator:
         """
 
         relative_path = resource_path("data/english.txt")
-        path = os.path.join(os.path.dirname(__file__), relative_path)
 
         # If the wordlist file doesn't exist, download it
-        if not os.path.isfile(path):
+        if not os.path.isfile(relative_path):
             print("Wordlist not found. Downloading...")
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            self.download_bip39_wordlist(save_path=path)
+            os.makedirs(os.path.dirname(relative_path), exist_ok=True)
+            self.download_bip39_wordlist(save_path=relative_path)
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(relative_path, "r", encoding="utf-8") as f:
             return [word.strip() for word in f.readlines()]
 
     # Generate entropy of desired bit length
