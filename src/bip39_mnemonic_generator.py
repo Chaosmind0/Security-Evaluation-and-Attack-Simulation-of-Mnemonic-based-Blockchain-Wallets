@@ -53,7 +53,7 @@ class BIP39MnemonicGenerator:
             raise Exception(f"Failed to download wordlist. Status code: {response.status_code}")
 
     # Load BIP39 English wordlist
-    def load_wordlist(self):
+    def load_wordlist(self) -> list[str]:
         """
 
         Loads the BIP39 English wordlist from the local file or downloads it if it doesn't exist.
@@ -63,15 +63,15 @@ class BIP39MnemonicGenerator:
 
         """
 
-        relative_path = resource_path("data/english.txt")
+        path = resource_path(os.path.join("data", "english.txt"))
 
-        # If the wordlist file doesn't exist, download it
-        if not os.path.isfile(relative_path):
+        # Download if missing
+        if not os.path.isfile(path):
             print("Wordlist not found. Downloading...")
-            os.makedirs(os.path.dirname(relative_path), exist_ok=True)
-            self.download_bip39_wordlist(save_path=relative_path)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            self.download_bip39_wordlist(save_path=path)
 
-        with open(relative_path, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return [word.strip() for word in f.readlines()]
 
     # Generate entropy of desired bit length
