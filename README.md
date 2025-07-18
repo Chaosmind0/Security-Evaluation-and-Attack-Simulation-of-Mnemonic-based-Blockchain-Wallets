@@ -37,6 +37,7 @@ This project evaluates the security of blockchain wallets that rely on **mnemoni
 │ ├── exhaustive_attack.py # Exhaustive brute-force strategy
 │ ├── simulate_brute_force_attack.py # Batch testing & report generation
 │ ├── analysis.py # CSV-based visual analysis with Seaborn
+│ ├── utils.py # Utility functions
 │ └── gui_main.py # PyQt5 GUI interface
 ├── report/
 │ ├── Brute force theoretical results.csv
