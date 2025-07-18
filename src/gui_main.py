@@ -1,15 +1,11 @@
 import os
 import sys
-import pkgutil
 
 # Inject src path into sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-src_path = os.path.join(project_root, "src")
+src_path = os.path.abspath(os.path.dirname(__file__))
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
-
-from utils import resource_path
-
 
 import threading
 import csv

@@ -1,18 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_dynamic_libs
+
 
 a = Analysis(
     ['src\\gui_main.py'],
-    pathex=['src'],
-    binaries=collect_dynamic_libs('coincurve'),
-    datas=[
-        ('src/data/english.txt', 'data'),
-        ('report', 'report')
-    ],
-    hiddenimports=[
-        'coincurve._cffi_backend',
-        'cffi',
-    ],
+    pathex=[],
+    binaries=[],
+    datas=[],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
