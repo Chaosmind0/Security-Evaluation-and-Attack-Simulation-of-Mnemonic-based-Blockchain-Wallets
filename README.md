@@ -42,6 +42,8 @@ This project evaluates the security of blockchain wallets that rely on **mnemoni
 │ ├── Brute force theoretical results.csv
 │ ├── Brute force actual decryption results.csv
 │ └── images/
+├── data/
+│ └── english.txt # BIP39 English wordlist
 └── README.md
 ```
 ---
