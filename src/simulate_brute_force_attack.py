@@ -155,8 +155,8 @@ if __name__ == "__main__":
     test_cases_2 = []
 
     if Test_2:
-        for word_count in [12, 24]:
-            for weak_pool_size in [32, 64, 128]:
+        for word_count in [12, 15, 18, 21, 24]:
+            for weak_pool_size in [32, 64, 128, 256, 512]:
                 for prefix_len in range(3, 7):
                     for allow_repeats in [True, False]:
                         case = {
