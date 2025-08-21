@@ -92,7 +92,7 @@ class WalletGUI(QWidget):
         count_layout = QHBoxLayout()
         count_layout.addWidget(QLabel("Word count"))
         self.word_count_box = QComboBox()
-        self.word_count_box.addItems(["12", "24"])
+        self.word_count_box.addItems(["12", "15", "18", "21", "24"])
         count_layout.addWidget(self.word_count_box)
         self.generate_btn = QPushButton("Generate")
         self.generate_btn.clicked.connect(self.generate_mnemonic)
@@ -173,7 +173,7 @@ class WalletGUI(QWidget):
 
         layout.addWidget(QLabel("Attack Mnemonic Word Count:"), 2, 0)
         self.attack_word_count_box = QComboBox()
-        self.attack_word_count_box.addItems(["12", "24"])
+        self.attack_word_count_box.addItems(["12", "15", "18", "21", "24"])
         layout.addWidget(self.attack_word_count_box, 2, 1)
 
         layout.addWidget(QLabel("Max Attempts:"), 2, 2)

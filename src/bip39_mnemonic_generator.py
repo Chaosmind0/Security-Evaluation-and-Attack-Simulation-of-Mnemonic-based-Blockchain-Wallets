@@ -88,8 +88,8 @@ class BIP39MnemonicGenerator:
 
         """
 
-        if bits not in [128, 256]:
-            raise ValueError("Only 128 or 256 bits supported.")
+        if bits not in [128, 160, 192, 224, 256]:
+            raise ValueError("Only 128, 160, 192, 224, or 256 bits supported.")
         return os.urandom(bits // 8)
 
     # Convert entropy + checksum into mnemonic
@@ -145,10 +145,16 @@ class BIP39MnemonicGenerator:
 
         if word_count == 12:
             entropy = self.generate_entropy(128)
+        elif word_count == 15:
+            entropy = self.generate_entropy(160)
+        elif word_count == 18:
+            entropy = self.generate_entropy(192)
+        elif word_count == 21:
+            entropy = self.generate_entropy(224)
         elif word_count == 24:
             entropy = self.generate_entropy(256)
         else:
-            raise ValueError("Only 12 or 24 words are supported.")
+            raise ValueError("Only 12, 15, 18, 21, or 24 words are supported.")
 
         mnemonic = self.entropy_to_mnemonic(entropy)
         return " ".join(mnemonic)
@@ -177,8 +183,8 @@ class BIP39MnemonicGenerator:
             str: Space-separated weak mnemonic phrase.
         """
 
-        if word_count not in [12, 24]:
-            raise ValueError("Only 12 or 24 words are supported.")
+        if word_count not in [12, 15, 18, 21, 24]:
+            raise ValueError("Only 12, 15, 18, 21 or 24 words are supported.")
 
         if pool_start < 0 or pool_start + weak_pool_size > len(self.wordlist):
             raise ValueError("Invalid weak pool range.")
