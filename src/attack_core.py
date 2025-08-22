@@ -105,6 +105,8 @@ def estimate_brute_force_security(
     max_attempts: int = 10**6,
     allow_repeats: bool = True,
     attempts_per_second: int = 10**10,
+    per_slot_pool_sizes: list[int] | None = None,
+    enforce_checksum: bool = True
 ) -> dict:
     """
 
@@ -117,6 +119,8 @@ def estimate_brute_force_security(
         max_attempts (int): Max number of attempts before stopping.
         allow_repeats (bool): Allow repeated words.
         attempts_per_second  (int): Speed of decryption algorithm (in bits/second).
+        per_slot_pool_sizes (list[int] | None): The scale of each candidate.
+        enforce_checksum (bool): 
 
     Returns:
         Dictionary with the results of the attack.
