@@ -2,6 +2,7 @@ import os
 import hashlib
 import random
 import requests
+from typing import List, Dict
 
 
 class BIP39MnemonicGenerator:
@@ -204,6 +205,43 @@ class BIP39MnemonicGenerator:
 
         final_words = (prefix or []) + chosen
         return " ".join(final_words)
+    
+    def build_per_slot_candidates(wordlist: List[str],
+                                word_count: int,
+                                first_letter_hints: Dict[int, str] | None = None,
+                                prefix_hints: Dict[int, str] | None = None) -> List[List[str]]:
+        
+        """
+        Build per-slot candidate lists based on optional first-letter/prefix hints.
+        first_letter_hints: {pos: 'a'} means slot 'pos' must start with 'a'
+        prefix_hints: {pos: 'ab'} means slot 'pos' must start with 'ab'
+        If no hint for a slot, use the full wordlist.
+
+        Parameters:
+            wordlist (List[str]): List of words to choose from.
+            word_count (int): Number of words in the mnemonic.
+            first_letter_hints (Dict[int, str] | None): Optional first-letter hints.
+            prefix_hints (Dict[int, str] | None): Optional prefix hints.
+
+        Returns:
+            List[List[str]]: List of per-slot candidate lists.
+
+        """
+
+        first_letter_hints = first_letter_hints or {}
+        prefix_hints = prefix_hints or {}
+
+        slots: List[List[str]] = []
+        for i in range(word_count):
+            if i in prefix_hints:
+                pref = prefix_hints[i].lower()
+                slots.append([w for w in wordlist if w.startswith(pref)])
+            elif i in first_letter_hints:
+                ch = first_letter_hints[i].lower()
+                slots.append([w for w in wordlist if w.startswith(ch)])
+            else:
+                slots.append(list(wordlist))
+        return slots
 
 
 if __name__ == "__main__":
