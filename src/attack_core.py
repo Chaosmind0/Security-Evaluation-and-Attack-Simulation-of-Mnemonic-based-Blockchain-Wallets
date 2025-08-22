@@ -120,36 +120,51 @@ def estimate_brute_force_security(
         allow_repeats (bool): Allow repeated words.
         attempts_per_second  (int): Speed of decryption algorithm (in bits/second).
         per_slot_pool_sizes (list[int] | None): The scale of each candidate.
-        enforce_checksum (bool): 
+        enforce_checksum (bool): Enforce checksum.
 
     Returns:
         Dictionary with the results of the attack.
 
     """
 
-    r = word_count - prefix_length
-    N = pool_size
-    T = max_attempts
-
-    # Total combinations calculation
-    if allow_repeats:
-        total_combinations = N**r
+    # compute base combinations
+    if per_slot_pool_sizes:
+        # product of per-position candidate sizes
+        r = len(per_slot_pool_sizes)  # unknown slots explicitly modeled
+        total_combinations = 1
+        for n in per_slot_pool_sizes:
+            total_combinations *= n
+        # effective pool_size for entropy display: geometric mean
+        effective_pool = (total_combinations ** (1.0 / r)) if r > 0 else 1
     else:
-        if N < r:
-            return {"success_probability": 0, "entropy": 0}
-        total_combinations = math.perm(N, r)  # Number of combinations without repetitions
+        r = word_count - prefix_length
+        N = pool_size
+        if allow_repeats:
+            total_combinations = N ** r
+        else:
+            if N < r:
+                return {"success_probability": 0, "entropy_bits": 0,
+                        "time cost str": "0", "time cost": 0,
+                        "security level": "Too Weak"}
+            total_combinations = math.perm(N, r)
+        effective_pool = pool_size
 
-    # Success probability calculation
-    success_prob = T / total_combinations
+    # apply checksum ratio (≈ 2^-CS)
+    if enforce_checksum:
+        cs_bits_map = {12: 4, 15: 5, 18: 6, 21: 7, 24: 8}
+        cs = cs_bits_map.get(word_count, 0)
+        total_combinations = total_combinations * (2 ** (-cs))
+
+    # success prob and time
+    T = max_attempts
+    success_prob = T / total_combinations if total_combinations > 0 else 0.0
 
     time_cost_sec = total_combinations / attempts_per_second
-    security_level, entropy, time_sec, time_cost_str = classify_security_level(
-        time_cost_sec, pool_size, r
-    )
 
-    print("Total combinations: " + str(total_combinations))
-    print("Success probability: " + str(success_prob))
-    print("entropy bits: " + str(entropy))
+    # reuse your existing classification (entropy uses pool_size^r); we adapt pool for per-slot
+    security_level, entropy, time_sec, time_cost_str = classify_security_level(
+        time_cost_sec, int(effective_pool), r
+    )
 
     return {
         "total_combinations": total_combinations,
