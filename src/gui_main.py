@@ -79,6 +79,58 @@ class WalletGUI(QWidget):
 
         self.setLayout(main_layout)
 
+    def parse_indexed_kv(self, text: str) -> dict[int, str]:
+        """
+        Parse 'pos:value' pairs separated by commas.
+        Example: '0:abandon, 5:about' -> {0:'abandon', 5:'about'}
+
+        Parameters:
+            text (str): The input text.
+
+        Returns:
+            dict[int, str]: The parsed dictionary.
+
+        """
+
+        res = {}
+        if not text.strip():
+            return res
+        parts = [p.strip() for p in text.split(",") if p.strip()]
+        for p in parts:
+            if ":" not in p:
+                continue
+            k, v = p.split(":", 1)
+            k = k.strip()
+            v = v.strip().lower()
+            if k.isdigit():
+                res[int(k)] = v
+        return res
+
+    def build_per_slot_candidates(self, wordlist: list[str], word_count: int,
+                              hints: dict[int, str]) -> list[list[str]]:
+        """
+        Build per-slot candidate lists from first-letter/prefix hints.
+        If no hint for a slot -> full wordlist for that slot.
+
+        Parameters:
+            wordlist (list[str]): The full wordlist.
+            word_count (int): The number of words in the mnemonic.
+            hints (dict[int, str]): The hints for each slot.
+
+        Returns:
+            list[list[str]]: The per-slot candidate lists.
+
+        """
+
+        slots = []
+        for i in range(word_count):
+            if i in hints and hints[i]:
+                pref = hints[i].lower()
+                slots.append([w for w in wordlist if w.startswith(pref)])
+            else:
+                slots.append(list(wordlist))
+        return slots
+
     def build_mnemonic_group(self):
         """
 
@@ -141,7 +193,6 @@ class WalletGUI(QWidget):
 
     def build_attack_group(self):
         """
-
         Builds the group for simulating the brute-force attack.
 
         """
@@ -149,11 +200,14 @@ class WalletGUI(QWidget):
         group = QGroupBox("Brute-force Attack Simulator")
         layout = QGridLayout()
 
+        # mode
         layout.addWidget(QLabel("Mode:"), 0, 0)
         self.mode_box = QComboBox()
-        self.mode_box.addItems(["random", "exhaustive"])
+        # add constrained mode
+        self.mode_box.addItems(["random", "exhaustive", "constrained"])
         layout.addWidget(self.mode_box, 0, 1)
 
+        # pool size & start
         layout.addWidget(QLabel("Weak Pool Size:"), 0, 2)
         self.pool_size_input = QLineEdit("64")
         layout.addWidget(self.pool_size_input, 0, 3)
@@ -167,13 +221,15 @@ class WalletGUI(QWidget):
         self.target_coin_box.addItems(["ETHEREUM", "BITCOIN"])
         layout.addWidget(self.target_coin_box, 0, 7)
 
+        # prefix (legacy support)
         layout.addWidget(QLabel("Prefix (space-separated):"), 1, 0, 1, 2)
         self.prefix_input = QLineEdit("abandon abandon abandon")
         layout.addWidget(self.prefix_input, 1, 2, 1, 6)
 
+        # word count (support 12/15/18/21/24)
         layout.addWidget(QLabel("Attack Mnemonic Word Count:"), 2, 0)
         self.attack_word_count_box = QComboBox()
-        self.attack_word_count_box.addItems(["12", "15", "18", "21", "24"])
+        self.attack_word_count_box.addItems(["12", "15", "18", "21", "24"])  # expanded
         layout.addWidget(self.attack_word_count_box, 2, 1)
 
         layout.addWidget(QLabel("Max Attempts:"), 2, 2)
@@ -192,15 +248,40 @@ class WalletGUI(QWidget):
         self.save_btn.clicked.connect(self.save_result_as_csv)
         layout.addWidget(self.save_btn, 2, 7)
 
+        # Advanced (NEW): checksum + masks + per-slot hints + bag-of-words
+        adv_group = QGroupBox("Advanced (Constrained Search)")
+        adv = QGridLayout()
+
+        self.enforce_checksum_box = QCheckBox("Enforce BIP39 checksum")
+        self.enforce_checksum_box.setChecked(True)
+        adv.addWidget(self.enforce_checksum_box, 0, 0, 1, 2)
+
+        adv.addWidget(QLabel("Known positions (pos:word, comma-separated):"), 1, 0, 1, 2)
+        self.known_positions_input = QLineEdit("0:abandon, 5:about")  # example
+        adv.addWidget(self.known_positions_input, 1, 2, 1, 6)
+
+        adv.addWidget(QLabel("First-letter / prefix hints (pos:hint):"), 2, 0, 1, 2)
+        self.slot_hints_input = QLineEdit("3:a, 7:ab")  # a or ab... means startswith
+        adv.addWidget(self.slot_hints_input, 2, 2, 1, 6)
+
+        adv.addWidget(QLabel("Bag of words (comma-separated, optional):"), 3, 0, 1, 2)
+        self.bag_words_input = QLineEdit("")  # optional
+        adv.addWidget(self.bag_words_input, 3, 2, 1, 6)
+
+        adv_group.setLayout(adv)
+        layout.addWidget(adv_group, 3, 0, 1, 8)
+
+        # outputs
         self.attack_output = QTextEdit()
         self.attack_output.setReadOnly(True)
-        layout.addWidget(self.attack_output, 3, 0, 1, 8)
+        layout.addWidget(self.attack_output, 4, 0, 1, 8)
 
         self.progress_bar = QProgressBar()
-        layout.addWidget(self.progress_bar, 4, 0, 1, 8)
+        layout.addWidget(self.progress_bar, 5, 0, 1, 8)
 
         group.setLayout(layout)
         return group
+
 
     def generate_mnemonic(self):
         """
@@ -308,7 +389,6 @@ class WalletGUI(QWidget):
 
     def simulate_attack(self):
         """
-
         Simulates the brute-force attack and displays the result in the GUI.
 
         """
@@ -326,36 +406,100 @@ class WalletGUI(QWidget):
             self.signals.error.emit(f"Input Error: {str(e)}")
             return
 
+        # basic parameter checks
         try:
             check_parameters(prefix, word_count, weak_pool_size, pool_start)
         except AssertionError as ae:
             self.signals.error.emit(f"Parameter Error: {str(ae)}")
             return
 
-        estimate = estimate_brute_force_security(
-            pool_size=weak_pool_size,
-            word_count=word_count,
-            prefix_length=len(prefix),
-            max_attempts=max_attempts,
-            allow_repeats=allow_repeats,
-        )
+        # Advanced params (for constrained mode) 
+        enforce_checksum = self.enforce_checksum_box.isChecked()
+        known_positions = self.parse_indexed_kv(self.known_positions_input.text())
+        slot_hints = self.parse_indexed_kv(self.slot_hints_input.text())
+        bag_words = [w.strip().lower() for w in self.bag_words_input.text().split(",") if w.strip()] or None
+
+        # per-slot candidates and sizes (only if constrained mode or user provided hints)
+        per_slot_candidates = None
+        per_slot_pool_sizes = None
+
+        # we can leverage loaded BIP39 wordlist from the generator
+        wordlist = getattr(self.generator, "wordlist", None)
+
+        use_constrained_inputs = (mode == "constrained") or bool(slot_hints or known_positions or bag_words)
+
+        if use_constrained_inputs:
+            if not wordlist:
+                self.signals.error.emit("Wordlist not loaded. Cannot build per-slot candidates.")
+                return
+            per_slot_candidates = self.build_per_slot_candidates(wordlist, word_count, slot_hints)
+            per_slot_pool_sizes = [len(x) for x in per_slot_candidates]
+
+        # Estimation (show S_eff etc.) 
+        estimate = None
+        try:
+            if per_slot_pool_sizes:
+                estimate = estimate_brute_force_security(
+                    pool_size=weak_pool_size,
+                    word_count=word_count,
+                    prefix_length=len(prefix),  # ignored when per-slot provided
+                    max_attempts=max_attempts,
+                    allow_repeats=allow_repeats,
+                    attempts_per_second=10**10,
+                    per_slot_pool_sizes=per_slot_pool_sizes,
+                    enforce_checksum=enforce_checksum,
+                )
+            else:
+                estimate = estimate_brute_force_security(
+                    pool_size=weak_pool_size,
+                    word_count=word_count,
+                    prefix_length=len(prefix),
+                    max_attempts=max_attempts,
+                    allow_repeats=allow_repeats,
+                    attempts_per_second=10**10,
+                    enforce_checksum=enforce_checksum,
+                )
+        except Exception as e:
+            self.signals.error.emit(f"Estimation Error: {str(e)}")
+            return
 
         self.signals.log.emit("=== Brute-force Estimation ===")
-        self.signals.log.emit(f"Total combinations: {estimate['total_combinations']}")
+        self.signals.log.emit(f"Mode: {mode}")
+        self.signals.log.emit(f"Enforce checksum: {enforce_checksum}")
+        if per_slot_pool_sizes:
+            self.signals.log.emit(f"Per-slot pool sizes: {per_slot_pool_sizes}")
+        self.signals.log.emit(f"Total combinations (effective): {estimate['total_combinations']:.4e}")
         self.signals.log.emit(f"Entropy (bits): {estimate['entropy_bits']:.2f}")
-        self.signals.log.emit(f"Success Probability: {estimate['success_probability']:.2e}\n")
+        self.signals.log.emit(f"Success Probability (<=): {estimate['success_probability']:.2e}")
+        self.signals.log.emit(f"Time Cost (est.): {estimate['time cost str']}\n")
 
+        # Run selected strategy 
         strategy = get_attack_strategy(mode)
-        result = strategy.run(
-            word_count=word_count,
-            weak_pool_size=weak_pool_size,
-            pool_start=pool_start,
-            prefix=prefix,
-            allow_repeats=allow_repeats,
-            target_coin=target_coin,
-            max_attempts=max_attempts,
-            progress_callback=self.thread_safe_progress,
-        )
+        if mode == "constrained":
+            # pass constrained parameters
+            result = strategy.run(
+                word_count=word_count,
+                per_slot_candidates=per_slot_candidates,
+                known_positions=known_positions,
+                bag_of_words=bag_words,
+                allow_repeats=allow_repeats,
+                enforce_checksum=enforce_checksum,
+                target_coin=target_coin,
+                max_attempts=max_attempts,
+                progress_callback=self.thread_safe_progress,
+            )
+        else:
+            # fallback to legacy random/exhaustive
+            result = strategy.run(
+                word_count=word_count,
+                weak_pool_size=weak_pool_size,
+                pool_start=pool_start,
+                prefix=prefix,
+                allow_repeats=allow_repeats,
+                target_coin=target_coin,
+                max_attempts=max_attempts,
+                progress_callback=self.thread_safe_progress,
+            )
 
         self.attack_results.append(result)
 
