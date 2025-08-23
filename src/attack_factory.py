@@ -1,5 +1,6 @@
 from strategy.random_attack import RandomAttackStrategy
 from strategy.exhaustive_attack import ExhaustiveAttackStrategy
+from strategy.constrained_attack import ConstrainedAttackStrategy
 
 
 def get_attack_strategy(mode: str):
@@ -19,5 +20,7 @@ def get_attack_strategy(mode: str):
         return RandomAttackStrategy()
     elif mode == "exhaustive":
         return ExhaustiveAttackStrategy()
+    elif mode == "constrained":
+        return ConstrainedAttackStrategy()
     else:
         raise ValueError(f"Unsupported attack mode: {mode}")
